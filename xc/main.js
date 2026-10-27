@@ -19,7 +19,9 @@
   const ready = photos.map(() => false);
 
   // p is the eased camera progress when the 3D scene runs, the raw scroll progress otherwise
+  let shown = 0;
   function stage(p) {
+    shown = p;
     const i = Math.min(last, Math.max(0, Math.round(p)));
     // dip to black around each cut between shots
     const edge = Math.abs(p - Math.round(p - 0.5) - 0.5);
@@ -41,7 +43,7 @@
     img.onload = () => {
       el.style.backgroundImage = `url("${el.dataset.src}")`;
       ready[k] = true;
-      request();
+      stage(shown);
     };
     img.src = el.dataset.src;
   });

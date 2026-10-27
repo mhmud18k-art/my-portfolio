@@ -19,8 +19,10 @@ The hero is a real-time 3D scene built with Three.js: a concrete house with a bo
 | `vendor/three.min.js` | Three.js r159, MIT (`vendor/three.LICENSE`) |
 | `shots/` | Stills rendered from the scene: the project cards, and `poster.jpg`, shown before WebGL starts or where it isn't available |
 
-## Real photos
+## Photos
 
-Put photos in `photos/` named `1.jpg` to `5.jpg`, one per shot in the order above. Each photo that exists replaces the 3D view for its shot and slowly dollies in as you scroll; shots without a photo stay 3D. Landscape, at least 1920px wide, with the subject right of centre (the headlines sit on the left).
+`photos/1.jpg` to `5.jpg` are AI-generated in Figma (gemini-3.1-flash-image), one per shot in the order above. Each photo replaces the 3D view for its shot and slowly dollies in as you scroll; the 3D scene only shows for a shot whose photo is missing or fails to load. To swap one, replace the file with a landscape image with the subject right of centre (the headlines sit on the left), and adjust its `background-position` in `index.html` so phones crop toward the subject.
+
+The project cards in `shots/` are 4:5 crops of the same photos, and `shots/poster.jpg` is photo 1, shown until the page is ready.
 
 With `prefers-reduced-motion`, the camera jumps between shots instead of easing and the idle drift is off.
