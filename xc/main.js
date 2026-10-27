@@ -2,7 +2,7 @@
   const hero = document.querySelector('.hero');
   const scenes = [...document.querySelectorAll('.scene')];
   const chapters = [...document.querySelectorAll('.chapter')];
-  const pills = [...document.querySelectorAll('.pills a')];
+  const pills = [...document.querySelectorAll('.pills a[data-scene]')];
   const bar = document.querySelector('.progress i');
   const counter = document.querySelector('.counter');
   const hint = document.querySelector('.hint');
@@ -72,7 +72,8 @@
     });
 
     const active = Math.round(p);
-    pills.forEach(a => a.classList.toggle('is-active', +a.dataset.scene === active));
+    const inHero = scrollY - hero.offsetTop <= span();
+    pills.forEach(a => a.classList.toggle('is-active', inHero && +a.dataset.scene === active));
     bar.style.transform = `scaleY(${p / last})`;
     counter.textContent = String(active + 1).padStart(2, '0');
     hint.style.opacity = p > 0.15 ? 0 : 1;

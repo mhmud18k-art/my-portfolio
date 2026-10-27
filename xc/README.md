@@ -1,6 +1,6 @@
-# Ishikawa — scroll-driven architecture site
+# xc — scroll-driven portfolio (Arabic, RTL)
 
-Open `index.html` in a browser. The hero is a sticky stage with 5 scenes; scrolling crossfades them and pushes the camera in, while the headline for each scene fades in and out.
+Open `index.html` in a browser. It presents my work in Arabic: the hero is a sticky stage with 5 scenes; scrolling crossfades them and pushes the camera in, while the headline for each scene fades in and out.
 
 ## Replacing the scenes with real images
 
