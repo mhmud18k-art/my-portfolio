@@ -14,22 +14,49 @@
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
   const ease = t => t * t * (3 - 2 * t);
 
-  // pine silhouettes, seeded so the layout is the same on every load
+  // seeded so the drawings come out the same on every load
   let seed = 7;
   const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  document.querySelectorAll('.pines').forEach(g => {
-    const n = +g.dataset.count, y = +g.dataset.y, h = +g.dataset.h;
-    const x0 = +g.dataset.x0, x1 = +g.dataset.x1, spread = +(g.dataset.spread || 40);
+
+  document.querySelectorAll('.stars').forEach(g => {
+    const n = +g.dataset.count, h = +(g.dataset.h || 900);
     let out = '';
     for (let i = 0; i < n; i++) {
-      const x = x0 + rand() * (x1 - x0);
-      const dy = rand() * spread;
-      const s = (0.6 + rand() * 0.6) * (1 + dy / 400);
-      const ph = h * s, pw = ph * 0.34, by = y + dy + ph * 0.4;
-      out += `<path d="M${x} ${by - ph}l${pw} ${ph}h${-pw * 2}z" fill="url(#g-pine)"/>`;
+      const r = rand() < 0.08 ? 1.2 + rand() * 1.2 : 0.4 + rand() * 0.8;
+      out += `<circle cx="${(rand() * 1600).toFixed(1)}" cy="${(rand() * h).toFixed(1)}" r="${r.toFixed(2)}" fill="#fff" opacity="${(0.3 + rand() * 0.7).toFixed(2)}"/>`;
     }
     g.innerHTML = out;
   });
+
+  // flat-roofed houses with a few lit windows
+  document.querySelectorAll('.city').forEach(g => {
+    seed = +g.dataset.seed;
+    const base = +g.dataset.y, hmin = +g.dataset.hmin, hmax = +g.dataset.hmax;
+    const fill = g.dataset.fill, lit = +g.dataset.lit;
+    let out = '', x = -20;
+    while (x < 1620) {
+      const w = 70 + rand() * 110, h = hmin + rand() * (hmax - hmin), top = base - h;
+      out += `<rect x="${x.toFixed(1)}" y="${top.toFixed(1)}" width="${(w + 1).toFixed(1)}" height="${h.toFixed(1)}" fill="${fill}"/>`;
+      if (rand() < 0.4) out += `<rect x="${(x + 6).toFixed(1)}" y="${(top - 8).toFixed(1)}" width="${(w - 12).toFixed(1)}" height="8" fill="${fill}"/>`;
+      for (let wy = top + 18; wy < base - 24; wy += 34) {
+        for (let wx = x + 14; wx < x + w - 22; wx += 30) {
+          if (rand() < lit) out += `<rect x="${wx.toFixed(1)}" y="${wy.toFixed(1)}" width="12" height="16" rx="1" fill="#ffc77a" opacity="${(0.55 + rand() * 0.45).toFixed(2)}"/>`;
+        }
+      }
+      x += w;
+    }
+    g.innerHTML = out;
+  });
+
+  // the subjects sit left of centre to stay clear of the headlines, so narrow screens crop toward them
+  const narrow = matchMedia('(max-width: 760px)');
+  const frame = () => scenes.forEach(el => {
+    const svg = el.querySelector('svg');
+    svg.setAttribute('viewBox', narrow.matches ? '180 0 1600 900' : '0 0 1600 900');
+    svg.setAttribute('preserveAspectRatio', narrow.matches ? 'xMinYMid slice' : 'xMidYMid slice');
+  });
+  narrow.addEventListener('change', frame);
+  frame();
 
   // drop a real image at assets/scene-N.jpg and it replaces the drawing
   scenes.forEach(el => {
