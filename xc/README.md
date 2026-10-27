@@ -21,7 +21,7 @@ The camera travels at an even pace between stations and eases into each one. The
 | `style.css` | Layout and type |
 | `main.js` | Scroll and pointer loop, the tour, headlines, nav, progress bar, and the flat fallback |
 | `scene3d.js` | The world: terrain, lake, road, forest, house, sky and light, the camera's journey, and the post-processing |
-| `textures/*.webp` | Photographic textures, AI-generated in Figma and made tileable: rock (with a normal map), alpine meadow (with a normal map), forest floor, and a spruce branch cut out on alpha |
+| `textures/*.webp` | Photographic textures, AI-generated in Figma and made tileable: rock, alpine meadow, forest floor, and a spruce branch cut out on alpha |
 | `textures/textures.js` | The same textures as data URLs (generated, see below) |
 | `tools/bundle-textures.py` | Rebuilds `textures/textures.js` |
 | `vendor/three.min.js` | Three.js r159, MIT (`vendor/three.LICENSE`) |
