@@ -12,8 +12,39 @@
 
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 
-  const world = window.Scene3D && Scene3D.init(document.querySelector('.gl'));
+  const veil = document.querySelector('.veil');
+  // assigned below; the scene calls stage() on its first frame, before init returns
+  let world = null;
+  const photos = [...document.querySelectorAll('.photo')];
+  const ready = photos.map(() => false);
+
+  // p is the eased camera progress when the 3D scene runs, the raw scroll progress otherwise
+  function stage(p) {
+    const i = Math.min(last, Math.max(0, Math.round(p)));
+    // dip to black around each cut between shots
+    const edge = Math.abs(p - Math.round(p - 0.5) - 0.5);
+    veil.style.opacity = (p > 0.3 && p < last - 0.3 ? Math.max(0, 1 - edge / 0.09) : 0).toFixed(3);
+    // a photo, where there is one, takes over its shot and dollies in like the camera would
+    const u = clamp(p - i + 0.5);
+    photos.forEach((el, k) => {
+      el.style.opacity = ready[k] && k === i ? 1 : 0;
+      if (k === i && !still) el.style.transform = `scale(${1.04 + 0.1 * u}) translate3d(${((0.5 - u) * 1.6).toFixed(2)}%,0,0)`;
+    });
+    if (world) world.setHidden(ready[i]);
+  }
+
+  world = window.Scene3D ? Scene3D.init(document.querySelector('.gl'), { onFrame: stage }) : null;
   if (!world) document.querySelector('.stage').classList.add('no-gl');
+
+  photos.forEach((el, k) => {
+    const img = new Image();
+    img.onload = () => {
+      el.style.backgroundImage = `url("${el.dataset.src}")`;
+      ready[k] = true;
+      request();
+    };
+    img.src = el.dataset.src;
+  });
 
   const span = () => hero.offsetHeight - innerHeight;
   const toProgress = y => clamp((y / span()) * (last + 2 * HOLD) - HOLD, 0, last);
@@ -24,6 +55,7 @@
     ticking = false;
     const p = toProgress(scrollY - hero.offsetTop);
     if (world) world.setProgress(p);
+    else stage(p);
 
     chapters.forEach((el, i) => {
       const d = p - i;

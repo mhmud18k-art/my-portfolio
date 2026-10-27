@@ -1,7 +1,8 @@
 /* The hero's 3D world: a concrete house with a bonsai courtyard, a wood-slat
    corridor and a lit interior, set on a forested plateau ringed by mountains.
    Scroll progress (0..4) picks one of five camera shots; each shot dollies
-   slowly and the cut between shots dips to black. */
+   slowly; opts.onFrame(p) gets the eased progress every frame so the page
+   can time the cuts between shots to the camera. */
 (() => {
   const T = window.THREE;
 
@@ -154,7 +155,7 @@
   // the environment map is for reflections in glass and water; everything else only takes a hint of it
   for (const k in M) if (!['glass', 'lake', 'led'].includes(k)) M[k].envMapIntensity = 0.28;
 
-  function init(canvas) {
+  function init(canvas, opts) {
     const renderer = new T.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
     renderer.toneMapping = T.ACESFilmicToneMapping;
@@ -437,7 +438,7 @@
     const eye = new T.Vector3(), look = new T.Vector3();
     let target = 0, current = 0, last = performance.now(), dirty = true, running = true;
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const veil = document.querySelector('.veil');
+    let hidden = false;
 
     function resize() {
       const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -467,10 +468,7 @@
       eye.y = Math.max(eye.y, heightAt(eye.x, eye.z) + 1.2);
       camera.position.copy(eye);
       camera.lookAt(look);
-      // dip to black around each cut
-      const edge = Math.abs(p - Math.round(p - 0.5) - 0.5);
-      const cut = p > 0.3 && p < SHOTS.length - 1.3 ? Math.max(0, 1 - edge / 0.09) : 0;
-      if (veil) veil.style.opacity = cut.toFixed(3);
+      if (opts.onFrame) opts.onFrame(p);
     }
 
     function frame(now) {
@@ -481,7 +479,7 @@
       current = still ? target : current + (target - current) * Math.min(1, dt * 3.2);
       if (Math.abs(current - prev) > 1e-5 || dirty || !still) {
         place(current, now);
-        renderer.render(scene, camera);
+        if (!hidden) renderer.render(scene, camera);
         dirty = false;
       }
       requestAnimationFrame(frame);
@@ -500,13 +498,20 @@
 
     return {
       setProgress(p) { target = p; },
+      // while a photo covers the current shot there is no point drawing the scene under it
+      setHidden(h) {
+        if (h === hidden) return;
+        hidden = h;
+        canvas.style.visibility = h ? 'hidden' : '';
+        dirty = true;
+      },
     };
   }
 
   window.Scene3D = {
-    init(canvas) {
+    init(canvas, opts = {}) {
       if (!T) return null;
-      try { return init(canvas); } catch (e) { console.error(e); return null; }
+      try { return init(canvas, opts); } catch (e) { console.error(e); return null; }
     },
   };
 })();

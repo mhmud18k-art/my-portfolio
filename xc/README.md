@@ -19,4 +19,8 @@ The hero is a real-time 3D scene built with Three.js: a concrete house with a bo
 | `vendor/three.min.js` | Three.js r159, MIT (`vendor/three.LICENSE`) |
 | `shots/` | Stills rendered from the scene: the project cards, and `poster.jpg`, shown before WebGL starts or where it isn't available |
 
+## Real photos
+
+Put photos in `photos/` named `1.jpg` to `5.jpg`, one per shot in the order above. Each photo that exists replaces the 3D view for its shot and slowly dollies in as you scroll; shots without a photo stay 3D. Landscape, at least 1920px wide, with the subject right of centre (the headlines sit on the left).
+
 With `prefers-reduced-motion`, the camera jumps between shots instead of easing and the idle drift is off.
