@@ -6,9 +6,11 @@
    courtyard. Seen from where the photo was taken the mesh is exactly the
    photo; step aside or forward and near surfaces move more than far ones.
 
-   draw(p, mx, my) renders scroll progress p (0..4, one unit per shot) with the
-   pointer at mx, my (-1..1): each shot steps slowly forward, the cut to the
-   next one walks through it, and the pointer moves the head and turns the view.
+   draw(p, mx, my, bob, sway) renders scroll progress p (0..4, one unit per
+   shot) with the pointer at mx, my (-1..1): each shot steps slowly forward, the
+   cut to the next one walks through it, the pointer moves the head and turns
+   the view, and bob and sway (-1..1, zero when standing still) are the head's
+   rise and fall and side-to-side roll with each step of a walk.
    Steps stay short, because the photo only covers what its camera saw; the
    rush of walking through is a lens zoom, which never leaves the photo. */
 (() => {
@@ -61,7 +63,8 @@
     // 3 aerial: forest and lake as ground seen from high up, mountains as backdrop
     {
       const U = levelAt(0.04);
-      out.push({ surfaces: [plane(U, -70), plane(aheadOf(U), 900)], far: 900, ref: 110, focus: 0.6 });
+      // seen from the air, so the walking bob is all but gone
+      out.push({ surfaces: [plane(U, -70), plane(aheadOf(U), 900)], far: 900, ref: 110, focus: 0.6, walk: 0.15 });
     }
     // 4 cedar corridor
     out.push({ surfaces: room([0.5, 0.36], [0.405, 0.127, 0.595, 0.573], 12), far: 60, ref: 12, focus: 0.5 });
@@ -160,20 +163,22 @@
     resize();
 
     const aim = new T.Vector3(), eye = new T.Vector3();
-    function view(k, dolly, zoom, mx, my) {
-      const s = SHOTS[k], D = s.ref;
+    function view(k, dolly, zoom, mx, my, bob, sway) {
+      const s = SHOTS[k], D = s.ref, w = s.walk ?? 1;
       cam.zoom = zoom;
       cam.updateProjectionMatrix();
       // narrow screens turn toward the subject; turning in place keeps the photo exact
       aim.copy(ray(narrow ? s.focus : 0.5, 0.5)).multiplyScalar(D);
-      eye.set(mx * 0.03 * D, -my * 0.02 * D, 0).addScaledVector(aim, dolly);
+      eye.set((mx * 0.03 + sway * w * 0.005) * D, (-my * 0.02 + bob * w * 0.0045) * D, 0).addScaledVector(aim, dolly);
       aim.add(eye).x += mx * 0.06 * D;
-      aim.y -= my * 0.04 * D;
+      // the head nods a little with each step and rolls with the sway
+      aim.y += (-my * 0.04 + bob * w * 0.002) * D;
+      cam.up.set(sway * w * 0.008, 1, 0);
       cam.position.copy(eye);
       cam.lookAt(aim);
     }
 
-    function draw(p, mx, my) {
+    function draw(p, mx, my, bob = 0, sway = 0) {
       const i = clamp(Math.round(p), 0, SHOTS.length - 1);
       const layers = [];
       // dolly is the step forward as a fraction of the shot's depth
@@ -202,7 +207,7 @@
         const b = built[L.k];
         if (!b || L.op <= 0.001) continue;
         b.material.opacity = L.op;
-        view(L.k, L.dolly, L.zoom, mx, my);
+        view(L.k, L.dolly, L.zoom, mx, my, bob, sway);
         renderer.clearDepth();
         renderer.render(b.scene, cam);
         drawn = true;
