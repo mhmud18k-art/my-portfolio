@@ -423,14 +423,14 @@
     const v = (x, y, z) => new T.Vector3(x, y, z);
     const SHOTS = [
       [v(2.9, 1.35, 4.75), v(1.1, 1.65, -1.6), v(2.3, 1.45, 4.1), v(0.9, 1.7, -1.6)],      // courtyard, bonsai on the white wall
-      [v(-14.2, 1.45, 0.25), v(-3.0, 1.55, 1.0), v(-11.6, 1.5, 0.15), v(-3.0, 1.6, 0.9)], // down the cedar corridor
       [v(16, 2.2, 31), v(-3, 4.6, -4), v(12.5, 2.4, 26), v(-4, 4.8, -4)],               // the house against the mountains
       [v(58, 34, 74), v(-6, 0, -12), v(84, 64, 104), v(-10, -6, -20)],                    // aerial pull-back
+      [v(-14.2, 1.45, 0.25), v(-3.0, 1.55, 1.0), v(-11.6, 1.5, 0.15), v(-3.0, 1.6, 0.9)], // down the cedar corridor
       [v(13.8, 1.35, 0.6), v(-0.4, 1.7, -1.9), v(11.6, 1.4, 0.5), v(-0.6, 1.75, -1.9)],   // from the bench, through the opening
     ];
 
     // what each shot is about; narrow screens aim straight at it and keep it in the top half, above the text
-    const FOCUS = [v(-1.1, 2.0, -1.4), v(-4, 1.6, 0.5), v(0, 3, 0), v(8, 0, 0), v(-1.1, 1.8, -1.4)];
+    const FOCUS = [v(-1.1, 2.0, -1.4), v(0, 3, 0), v(8, 0, 0), v(-4, 1.6, 0.5), v(-1.1, 1.8, -1.4)];
     let narrow = false;
 
     const camera = new T.PerspectiveCamera(42, 1, 0.1, 4000);
@@ -500,7 +500,6 @@
 
     return {
       setProgress(p) { target = p; },
-      jump(p) { target = current = p; dirty = true; },
     };
   }
 

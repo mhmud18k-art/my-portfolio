@@ -57,8 +57,5 @@
     scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' });
   });
 
-  // lets screenshots and deep links land on a shot without waiting for the camera to ease in
-  if (world && location.hash.startsWith('#shot=')) world.jump(+location.hash.slice(6));
-
   render();
 })();
