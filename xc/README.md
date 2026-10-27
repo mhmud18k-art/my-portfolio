@@ -1,17 +1,16 @@
-# xc — scroll-driven portfolio (Arabic, RTL)
+# xc — scroll-driven 3D portfolio (Arabic, RTL)
 
-Open `index.html` in a browser. It presents my work in Arabic: the hero is a sticky stage with 5 scenes (me at the desk, Cosmos, Darakom, Malaabi, contact); scrolling crossfades them and pushes the camera in, while the headline for each scene fades in and out.
+Open `index.html` in a browser; it works straight from the file, no server or build step.
 
-## Replacing the scenes with real images
+The hero is a real-time 3D scene built with Three.js: a concrete house with a bonsai courtyard, a cedar-slat corridor and a lit living room, on a forested plateau with a lake and mountains. Scrolling moves through five camera shots, and each cut dips to black. The headlines over the shots introduce me and how I work. Below the hero are my projects with real screenshots, then the tools I use and contact.
 
-Each scene is drawn in SVG as a placeholder. To use real renders, put images in `assets/`:
-
-| File | Scene |
+| Path | What it is |
 |---|---|
-| `assets/scene-1.jpg` | Desk with monitor and phone |
-| `assets/scene-2.jpg` | Cosmos — the solar system |
-| `assets/scene-3.jpg` | Darakom — Damascus rooftops at dusk |
-| `assets/scene-4.jpg` | Malaabi — a floodlit pitch at night |
-| `assets/scene-5.jpg` | Contact — paper plane at dawn |
+| `index.html` | Page markup and copy |
+| `style.css` | Layout and type |
+| `main.js` | Scroll progress, headlines, nav, progress bar |
+| `scene3d.js` | The 3D world and camera shots (all geometry and textures are generated in code) |
+| `vendor/three.min.js` | Three.js r159, MIT (`vendor/three.LICENSE`) |
+| `shots/` | Screenshots of Cosmos and Darakom, and `poster.jpg`, the still shown before WebGL starts or where it isn't available |
 
-Any image that exists replaces its drawing automatically. 16:9, at least 1920px wide works best. Headlines sit on the right, so keep the subject of each image centre or left.
+With `prefers-reduced-motion`, the camera jumps between shots instead of easing and the idle drift is off.

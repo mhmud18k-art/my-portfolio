@@ -12,226 +12,22 @@
 </head>
 <body>
 
-<!-- shared shapes -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <filter id="soft"><feGaussianBlur stdDeviation="14"/></filter>
-    <filter id="glow"><feGaussianBlur stdDeviation="40"/></filter>
-    <symbol id="pin" viewBox="0 0 40 56">
-      <path d="M20 56C20 56 0 32 0 20a20 20 0 0 1 40 0c0 12-20 36-20 36z" fill="#e9a65a"/>
-      <circle cx="20" cy="20" r="7" fill="#1a120a"/>
-    </symbol>
-  </defs>
-</svg>
-
 <header class="nav">
   <a class="brand" href="#top"><span class="brand-mark">+</span> محمد الموصللي</a>
   <nav class="pills" aria-label="الأقسام">
     <a href="#s1" data-scene="0">من أنا</a>
-    <a href="#s2" data-scene="1">الأعمال</a>
-    <a href="#manhaj">المنهج</a>
+    <a href="#s2" data-scene="1">المنهج</a>
+    <a href="#projets">الأعمال</a>
     <a href="#s5" data-scene="4">تواصل</a>
   </nav>
   <a class="cta cta-sm" href="mailto:mhmud.18.k@gmail.com">راسلني</a>
 </header>
 
 <main id="top">
-  <section class="hero" aria-label="من أنا وأعمالي">
+  <section class="hero" aria-label="من أنا">
     <div class="stage">
-      <!-- 01 the desk: where the work happens -->
-      <div class="scene" data-img="assets/scene-1.jpg">
-        <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <defs>
-            <linearGradient id="s1-wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1612"/><stop offset="1" stop-color="#2c231b"/></linearGradient>
-            <linearGradient id="s1-desk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a3a2c"/><stop offset="1" stop-color="#1a140f"/></linearGradient>
-            <linearGradient id="s1-screen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a1d26"/><stop offset="1" stop-color="#0e1016"/></linearGradient>
-            <radialGradient id="s1-planet" cx=".35" cy=".35" r=".7"><stop offset="0" stop-color="#f6c58a"/><stop offset=".6" stop-color="#e9a65a"/><stop offset="1" stop-color="#7a4a1e"/></radialGradient>
-            <radialGradient id="s1-lamp" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffcf8a" stop-opacity=".45"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/></radialGradient>
-          </defs>
-          <rect width="1600" height="900" fill="url(#s1-wall)"/>
-          <circle cx="170" cy="300" r="420" fill="url(#s1-lamp)"/>
-          <!-- desk -->
-          <rect y="640" width="1600" height="260" fill="url(#s1-desk)"/>
-          <rect y="640" width="1600" height="3" fill="#6b5440"/>
-          <!-- monitor -->
-          <rect x="250" y="180" width="700" height="430" rx="12" fill="#f4f1ec" opacity=".05" filter="url(#glow)"/>
-          <path d="M560 610h80l20 34h-120z" fill="#8f8a83"/>
-          <ellipse cx="600" cy="648" rx="110" ry="8" fill="#000" opacity=".4"/>
-          <rect x="250" y="180" width="700" height="430" rx="12" fill="#0a0a0c"/>
-          <rect x="264" y="194" width="672" height="402" rx="4" fill="url(#s1-screen)"/>
-          <!-- a right-to-left UI on the screen -->
-          <rect x="840" y="214" width="76" height="8" rx="4" fill="#f4f1ec" opacity=".8"/>
-          <rect x="540" y="210" width="170" height="16" rx="8" fill="#f4f1ec" opacity=".08"/>
-          <rect x="652" y="212" width="54" height="12" rx="6" fill="#e9a65a"/>
-          <rect x="284" y="210" width="60" height="16" rx="8" fill="#e9a65a" opacity=".85"/>
-          <rect x="676" y="290" width="240" height="30" rx="6" fill="#f4f1ec"/>
-          <rect x="740" y="334" width="176" height="30" rx="6" fill="#f4f1ec"/>
-          <rect x="700" y="386" width="216" height="7" rx="3.5" fill="#f4f1ec" opacity=".35"/>
-          <rect x="730" y="402" width="186" height="7" rx="3.5" fill="#f4f1ec" opacity=".35"/>
-          <rect x="806" y="436" width="110" height="30" rx="15" fill="#e9a65a"/>
-          <rect x="700" y="436" width="92" height="30" rx="15" fill="none" stroke="#f4f1ec" stroke-opacity=".3"/>
-          <rect x="290" y="270" width="350" height="290" rx="8" fill="#07070b"/>
-          <g fill="#fff"><circle cx="320" cy="300" r="1.4"/><circle cx="610" cy="320" r="1"/><circle cx="560" cy="530" r="1.2"/><circle cx="350" cy="510" r="1"/><circle cx="420" cy="290" r="1"/></g>
-          <ellipse cx="465" cy="415" rx="150" ry="46" fill="none" stroke="#f4f1ec" stroke-opacity=".14"/>
-          <circle cx="465" cy="415" r="62" fill="url(#s1-planet)"/>
-          <circle cx="600" cy="400" r="12" fill="#7b97b8"/>
-          <!-- phone running the Flutter app -->
-          <g transform="translate(-790 110) rotate(-6 1020 545)">
-            <rect x="960" y="440" width="120" height="210" rx="18" fill="#0a0a0c"/>
-            <rect x="968" y="452" width="104" height="186" rx="12" fill="#2f4a2a"/>
-            <rect x="976" y="470" width="88" height="70" rx="6" fill="#355330" stroke="#fff" stroke-opacity=".45"/>
-            <path d="M1020 470v70" stroke="#fff" stroke-opacity=".45"/>
-            <circle cx="1020" cy="505" r="12" fill="none" stroke="#fff" stroke-opacity=".45"/>
-            <rect x="992" y="556" width="72" height="8" rx="4" fill="#f4f1ec" opacity=".8"/>
-            <rect x="1012" y="572" width="52" height="6" rx="3" fill="#f4f1ec" opacity=".4"/>
-            <rect x="976" y="600" width="88" height="24" rx="12" fill="#e9a65a"/>
-          </g>
-          <!-- keyboard -->
-          <path d="M380 700h460l30 50H350z" fill="#d9d5cc"/>
-          <path d="M380 700h460l30 50H350z" fill="url(#s1-desk)" opacity=".25"/>
-          <g stroke="#b5b0a6" stroke-width="2"><path d="M372 716h476M362 733h496"/></g>
-          <ellipse cx="610" cy="756" rx="270" ry="8" fill="#000" opacity=".35"/>
-        </svg>
-      </div>
-
-      <!-- 02 Cosmos: the solar system -->
-      <div class="scene" data-img="assets/scene-2.jpg">
-        <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <defs>
-            <radialGradient id="s2-bg" cx=".3" cy=".5" r=".9"><stop offset="0" stop-color="#1c1730"/><stop offset="1" stop-color="#040309"/></radialGradient>
-            <radialGradient id="s2-sun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff4dc"/><stop offset=".45" stop-color="#ffc56e"/><stop offset=".8" stop-color="#e9862f"/><stop offset="1" stop-color="#e9862f" stop-opacity="0"/></radialGradient>
-            <radialGradient id="s2-earth" cx=".3" cy=".3" r=".8"><stop offset="0" stop-color="#9cc8f0"/><stop offset=".6" stop-color="#3f6fa8"/><stop offset="1" stop-color="#0c1a2c"/></radialGradient>
-            <radialGradient id="s2-mars" cx=".3" cy=".3" r=".8"><stop offset="0" stop-color="#f0a27a"/><stop offset=".6" stop-color="#b5532e"/><stop offset="1" stop-color="#2b0f06"/></radialGradient>
-            <linearGradient id="s2-jup" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#d8b48c"/><stop offset=".18" stop-color="#b98a60"/><stop offset=".3" stop-color="#ead2b0"/><stop offset=".45" stop-color="#a8754c"/>
-              <stop offset=".58" stop-color="#e6caa2"/><stop offset=".72" stop-color="#b98a60"/><stop offset=".86" stop-color="#dcc09a"/><stop offset="1" stop-color="#8a6040"/>
-            </linearGradient>
-            <radialGradient id="s2-shade" cx=".25" cy=".3" r=".9"><stop offset=".4" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".85"/></radialGradient>
-            <linearGradient id="s2-sat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#efdcb4"/><stop offset=".5" stop-color="#cfb184"/><stop offset="1" stop-color="#8e7350"/></linearGradient>
-          </defs>
-          <rect width="1600" height="900" fill="url(#s2-bg)"/>
-          <g class="stars" data-count="260"></g>
-          <circle cx="-120" cy="470" r="520" fill="url(#s2-sun)" opacity=".55" filter="url(#glow)"/>
-          <circle cx="-120" cy="470" r="300" fill="url(#s2-sun)"/>
-          <g fill="none" stroke="#f4f1ec" stroke-opacity=".1">
-            <ellipse cx="-120" cy="470" rx="520" ry="170"/><ellipse cx="-120" cy="470" rx="720" ry="240"/>
-            <ellipse cx="-120" cy="470" rx="960" ry="320"/><ellipse cx="-120" cy="470" rx="1200" ry="400"/>
-          </g>
-          <circle cx="350" cy="590" r="26" fill="url(#s2-earth)"/>
-          <circle cx="470" cy="330" r="17" fill="url(#s2-mars)"/>
-          <!-- Jupiter, Great Red Spot at 22°S -->
-          <circle cx="760" cy="650" r="78" fill="url(#s2-jup)"/>
-          <ellipse cx="736" cy="680" rx="16" ry="9" fill="#a8452a" opacity=".85"/>
-          <circle cx="760" cy="650" r="78" fill="url(#s2-shade)"/>
-          <!-- Saturn -->
-          <ellipse cx="660" cy="210" rx="104" ry="24" fill="none" stroke="#d9c49c" stroke-width="10" stroke-opacity=".5" transform="rotate(-14 660 210)"/>
-          <circle cx="660" cy="210" r="48" fill="url(#s2-sat)"/>
-          <circle cx="660" cy="210" r="48" fill="url(#s2-shade)"/>
-          <path d="M560 234a104 24 0 0 0 200-48" fill="none" stroke="#e8d6b0" stroke-width="10" stroke-opacity=".7" transform="rotate(-14 660 210)"/>
-        </svg>
-      </div>
-
-      <!-- 03 Darakom: Damascus rooftops with listings -->
-      <div class="scene" data-img="assets/scene-3.jpg">
-        <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <defs>
-            <linearGradient id="s3-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e1a33"/><stop offset=".55" stop-color="#6b4a5a"/><stop offset=".85" stop-color="#d98a52"/><stop offset="1" stop-color="#f0b06a"/></linearGradient>
-          </defs>
-          <rect width="1600" height="900" fill="url(#s3-sky)"/>
-          <circle cx="420" cy="560" r="70" fill="#ffd49a" opacity=".7" filter="url(#soft)"/>
-          <!-- Qasioun -->
-          <path d="M0 520c160-50 320-90 520-80s360 40 560 20 360-50 520-40v300H0z" fill="#3a2c3c"/>
-          <g fill="#ffcf8a"><circle cx="260" cy="500" r="2"/><circle cx="300" cy="492" r="1.6"/><circle cx="480" cy="470" r="2"/><circle cx="620" cy="476" r="1.6"/><circle cx="700" cy="482" r="2"/><circle cx="880" cy="486" r="1.6"/><circle cx="1040" cy="470" r="2"/></g>
-          <g class="city" data-y="700" data-hmin="60" data-hmax="150" data-fill="#2a2030" data-lit=".35" data-seed="11"></g>
-          <!-- dome and minaret -->
-          <path d="M600 700v-60h120v60z" fill="#241b29"/>
-          <path d="M600 640a60 60 0 0 1 120 0z" fill="#241b29"/>
-          <path d="M656 580h8v-14h-8z" fill="#241b29"/>
-          <path d="M760 700V470h24v230z" fill="#241b29"/>
-          <path d="M754 520h36v10h-36zM754 600h36v10h-36z" fill="#2f2434"/>
-          <path d="M760 470l12-44 12 44z" fill="#241b29"/>
-          <circle cx="772" cy="420" r="4" fill="#ffcf8a"/>
-          <g class="city" data-y="900" data-hmin="140" data-hmax="230" data-fill="#16111b" data-lit=".25" data-seed="5"></g>
-          <!-- listings -->
-          <g>
-            <use href="#pin" x="226" y="560" width="36" height="50"/>
-            <use href="#pin" x="452" y="610" width="30" height="42"/>
-            <use href="#pin" x="900" y="580" width="30" height="42"/>
-            <use href="#pin" x="560" y="680" width="48" height="68"/>
-            <circle cx="584" cy="752" r="34" fill="#e9a65a" opacity=".35" filter="url(#soft)"/>
-          </g>
-          <!-- the WhatsApp message that already names the property -->
-          <g transform="translate(470 560)">
-            <path d="M0 18a18 18 0 0 1 18-18h176a18 18 0 0 1 18 18v52a18 18 0 0 1-18 18H120l-18 18-6-18H18A18 18 0 0 1 0 70z" fill="#25d366"/>
-            <rect x="72" y="22" width="120" height="10" rx="5" fill="#fff" opacity=".95"/>
-            <rect x="110" y="42" width="82" height="8" rx="4" fill="#fff" opacity=".7"/>
-            <rect x="140" y="60" width="52" height="8" rx="4" fill="#fff" opacity=".7"/>
-          </g>
-        </svg>
-      </div>
-
-      <!-- 04 Malaabi: a pitch at night, ready for a match -->
-      <div class="scene" data-img="assets/scene-4.jpg">
-        <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <defs>
-            <clipPath id="s4-pitch"><path d="M330 360h940l330 540H0z"/></clipPath>
-            <radialGradient id="s4-flood" cx=".5" cy="0" r="1"><stop offset="0" stop-color="#fff6dc" stop-opacity=".55"/><stop offset="1" stop-color="#fff6dc" stop-opacity="0"/></radialGradient>
-          </defs>
-          <rect width="1600" height="900" fill="#06080a"/>
-          <rect y="300" width="1600" height="70" fill="#0f1410"/>
-          <g clip-path="url(#s4-pitch)">
-            <rect width="1600" height="900" fill="#2d5a2a"/>
-            <g fill="#356a31"><rect y="360" width="1600" height="34"/><rect y="436" width="1600" height="52"/><rect y="552" width="1600" height="80"/><rect y="730" width="1600" height="120"/></g>
-            <rect width="1600" height="900" fill="url(#s4-flood)" opacity=".5"/>
-          </g>
-          <g fill="none" stroke="#f4f1ec" stroke-opacity=".75" stroke-width="3">
-            <path d="M330 360h940l330 540H0z"/>
-            <path d="M190 590h1220"/>
-            <ellipse cx="800" cy="590" rx="170" ry="48"/>
-            <path d="M650 360v26h300v-26"/>
-            <path d="M470 900l20-150h620l20 150"/>
-          </g>
-          <circle cx="800" cy="590" r="5" fill="#f4f1ec"/>
-          <!-- two teams -->
-          <g>
-            <g fill="#e9a65a"><circle cx="520" cy="520" r="9"/><circle cx="660" cy="470" r="8"/><circle cx="420" cy="660" r="11"/><circle cx="700" cy="640" r="11"/><circle cx="600" cy="420" r="7"/></g>
-            <g fill="#f4f1ec"><circle cx="880" cy="470" r="8"/><circle cx="1000" cy="540" r="9"/><circle cx="920" cy="660" r="11"/><circle cx="1140" cy="640" r="11"/><circle cx="800" cy="400" r="7"/></g>
-            <circle cx="760" cy="600" r="5" fill="#fff"/>
-          </g>
-          <!-- floodlights -->
-          <path d="M190 360V140M1410 360V140" stroke="#1d2420" stroke-width="8"/>
-          <rect x="150" y="122" width="80" height="24" rx="4" fill="#fff6dc"/>
-          <rect x="1370" y="122" width="80" height="24" rx="4" fill="#fff6dc"/>
-          <circle cx="190" cy="134" r="90" fill="#fff6dc" opacity=".4" filter="url(#glow)"/>
-          <circle cx="1410" cy="134" r="90" fill="#fff6dc" opacity=".4" filter="url(#glow)"/>
-          <path d="M190 140L760 900H0V460z" fill="#fff6dc" opacity=".05"/>
-        </svg>
-      </div>
-
-      <!-- 05 contact: a message heading out at dawn -->
-      <div class="scene" data-img="assets/scene-5.jpg">
-        <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <defs>
-            <linearGradient id="s5-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#110e16"/><stop offset=".5" stop-color="#3a2a35"/><stop offset=".78" stop-color="#c9784a"/><stop offset="1" stop-color="#f0b06a"/></linearGradient>
-            <radialGradient id="s5-sun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff1d6"/><stop offset=".6" stop-color="#ffc77a"/><stop offset="1" stop-color="#ffc77a" stop-opacity="0"/></radialGradient>
-          </defs>
-          <rect width="1600" height="900" fill="url(#s5-sky)"/>
-          <g class="stars" data-count="60" data-h="320"></g>
-          <circle cx="480" cy="690" r="260" fill="url(#s5-sun)" opacity=".6"/>
-          <circle cx="480" cy="690" r="90" fill="#fff1d6"/>
-          <path d="M0 690c200-40 420-60 640-30s500 40 960 0v240H0z" fill="#2b1f26"/>
-          <path d="M0 760c260-40 520-30 780 0s560 20 820-10v150H0z" fill="#1a1318"/>
-          <path d="M0 830c400-30 800-30 1600 0v70H0z" fill="#0f0b0e"/>
-          <!-- paper plane and its trail -->
-          <path d="M120 640C300 560 420 520 560 470s200-110 260-170" fill="none" stroke="#f4f1ec" stroke-opacity=".45" stroke-width="3" stroke-dasharray="2 14" stroke-linecap="round"/>
-          <g transform="translate(830 290) rotate(-26)">
-            <path d="M0 0l150 30-120 26z" fill="#f4f1ec"/>
-            <path d="M30 56l120-26-96 46z" fill="#cfcac0"/>
-            <path d="M30 56l24 20 8-34z" fill="#9e988d"/>
-          </g>
-        </svg>
-      </div>
-
+      <canvas class="gl" aria-hidden="true"></canvas>
+      <div class="veil" aria-hidden="true"></div>
       <div class="shade"></div>
 
       <div class="chapters">
@@ -242,28 +38,28 @@
           <div class="tags"><span>Flutter · Dart</span><span>React · TypeScript</span><span>Firebase</span><span>Figma</span></div>
         </article>
         <article class="chapter" id="s2">
-          <p class="kicker">02 / 05 — كوزموس · ثنائي اللغة · React 19 · كانفاس</p>
-          <h2>ثمانية كواكب<br>بلا صورة واحدة.</h2>
-          <p>موقع لاستكشاف المجموعة الشمسية بالعربية والإنجليزية. الكواكب مرسومة بالكود على كانفاس من إحداثيات فلكية حقيقية، فلا صور تُحمَّل ولا شيء يمكن أن يفشل.</p>
-          <div class="actions"><a class="ghost" href="https://mhmud18k-art.github.io/cosmos/" target="_blank" rel="noopener">الموقع ↖</a><a class="ghost" href="https://github.com/mhmud18k-art/cosmos" target="_blank" rel="noopener">الكود ↖</a></div>
+          <p class="kicker">02 / 05 — المنهج</p>
+          <h2>العربية<br>لغة أساسية.</h2>
+          <p>لا لغة مترجَم إليها. الاتجاه والأرقام والخطوط وترتيب العناصر مصمَّمة لها من البداية، لا معكوسة عنها.</p>
+          <div class="tags"><span>RTL</span><span>الخطوط العربية</span><span>i18n</span></div>
         </article>
         <article class="chapter" id="s3">
-          <p class="kicker">03 / 05 — داركم · Firebase · منشور</p>
-          <h2>33 عقارًا<br>ورسالة واحدة.</h2>
-          <p>موقع عقارات شغّال لمكتب في دمشق. الزائر يفلتر حسب المنطقة والنوع والسعر، ويراسل المكتب على واتساب برسالة فيها رقم العقار جاهز. بلا إطار عمل وبلا خطوة بناء.</p>
-          <div class="actions"><a class="ghost" href="https://darakom-fa884.web.app/" target="_blank" rel="noopener">الموقع ↖</a><a class="ghost" href="https://github.com/mhmud18k-art/darakom-real-estate" target="_blank" rel="noopener">الكود ↖</a></div>
+          <p class="kicker">03 / 05 — المنهج</p>
+          <h2>أبسط حل<br>يفي بالغرض.</h2>
+          <p>إطار العمل يثبت جدواه أو لا يُستخدم. داركم مبني بوحدات ES خام لأن هذا بالضبط ما احتاجه.</p>
+          <div class="stats"><div><b>33</b><span>عقارًا على داركم</span></div><div><b>8</b><span>كواكب على كوزموس</span></div><div><b>3</b><span>رياضات على ملعبي</span></div></div>
         </article>
         <article class="chapter" id="s4">
-          <p class="kicker">04 / 05 — ملعبي · تطبيق Flutter قيد البناء</p>
-          <h2>احجز الملعب،<br>والقَ خصمك.</h2>
-          <p>كرة قدم وسلة وبادل. الفرق تنشر تحديًا يحدد نوع المباراة ومستواها وموعدها، وغيرها يقبله. نسخة الويب منشورة والتطبيق قيد البناء.</p>
-          <div class="actions"><a class="ghost" href="https://malaabi-b639a.web.app/" target="_blank" rel="noopener">الموقع ↖</a></div>
+          <p class="kicker">04 / 05 — المنهج</p>
+          <h2>الوصولية<br>جزء من البناء.</h2>
+          <p>لا مراجعة في آخر الطريق. حلقات التركيز تبقى، ونسب التباين تُقاس على الخلفية، وتفضيل تقليل الحركة محترَم.</p>
+          <div class="tags"><span>a11y</span><span>التباين</span><span>تقليل الحركة</span></div>
         </article>
         <article class="chapter" id="s5">
           <p class="kicker">05 / 05 — تواصل</p>
           <h2>خلّينا<br>نبني شي.</h2>
           <p>متاح لوظائف بدوام كامل ولعمل حر. أسرع طريقة للتواصل هي الإيميل.</p>
-          <div class="actions"><a class="cta" href="mailto:mhmud.18.k@gmail.com">راسلني</a><a class="ghost" href="https://github.com/mhmud18k-art" target="_blank" rel="noopener">GitHub ↖</a></div>
+          <div class="actions"><a class="cta" href="mailto:mhmud.18.k@gmail.com">راسلني</a><a class="ghost" href="#projets">شوف الأعمال</a></div>
         </article>
       </div>
 
@@ -275,25 +71,66 @@
     </div>
   </section>
 
+  <section class="projects" id="projets">
+    <header class="sec-head">
+      <p class="kicker">أعمال مختارة</p>
+      <h2>مشاريع منشورة</h2>
+    </header>
+
+    <article class="project">
+      <a class="shot" href="https://mhmud18k-art.github.io/cosmos/" target="_blank" rel="noopener">
+        <img src="shots/cosmos.jpg" alt="الصفحة الرئيسية لموقع كوزموس: مدارات الكواكب حول الشمس وعنوان «لا شيء هنا يقف ساكنًا»" width="1600" height="1000" loading="lazy">
+      </a>
+      <div class="info">
+        <p class="meta">01 · ثنائي اللغة · React 19 · كانفاس</p>
+        <h3>كوزموس · Cosmos</h3>
+        <p>موقع لاستكشاف المجموعة الشمسية بالعربية والإنجليزية مع دعم كامل للاتجاه من اليمين لليسار. الكواكب الثمانية مرسومة بالكود على كانفاس من إحداثيات فلكية حقيقية: حوض كالوريس عند 30.5° شمالًا، والبقعة الحمراء العظيمة عند 22° جنوبًا. لا صور تُحمَّل ولا شيء يمكن أن يفشل.</p>
+        <div class="links"><a href="https://mhmud18k-art.github.io/cosmos/" target="_blank" rel="noopener">الموقع ↖</a><a href="https://github.com/mhmud18k-art/cosmos" target="_blank" rel="noopener">الكود ↖</a></div>
+      </div>
+    </article>
+
+    <article class="project">
+      <a class="shot" href="https://mhmud18k-art.github.io/cosmos/" target="_blank" rel="noopener">
+        <img src="shots/cosmos-planets.jpg" alt="بطاقات الكواكب الثمانية في كوزموس، كل كوكب مرسوم بالكود" width="1600" height="1000" loading="lazy">
+      </a>
+      <div class="info">
+        <p class="meta">كوزموس · الكواكب الثمانية</p>
+        <h3>كل سطح مرسوم من بيانات حقيقية</h3>
+        <p>اخترت كانفاس ثنائي الأبعاد بدل WebGL عن قصد: ثمانية سياقات WebGL معًا تتجاوز حدّ المتصفح فتنطفئ أقدمها، وتختفي البطاقات أثناء التمرير.</p>
+      </div>
+    </article>
+
+    <article class="project">
+      <a class="shot" href="https://darakom-fa884.web.app/" target="_blank" rel="noopener">
+        <img src="shots/darakom.jpg" alt="الصفحة الرئيسية لموقع داركم العقاري: «بيوت دمشق، معروضة بوضوح»" width="1600" height="1000" loading="lazy">
+      </a>
+      <div class="info">
+        <p class="meta">02 · Firebase · JavaScript خام · منشور</p>
+        <h3>داركم</h3>
+        <p>موقع عقارات شغّال لمكتب في دمشق، فيه حاليًا 33 عقارًا. الزائر يفلتر حسب المنطقة والنوع والسعر، ولمّا يعجبه بيت يراسل المكتب على واتساب برسالة فيها رقم العقار جاهز. ووراءه لوحة تحكم للمكتب محمية بتسجيل دخول.</p>
+        <div class="links"><a href="https://darakom-fa884.web.app/" target="_blank" rel="noopener">الموقع ↖</a><a href="https://github.com/mhmud18k-art/darakom-real-estate" target="_blank" rel="noopener">الكود ↖</a></div>
+      </div>
+    </article>
+
+    <article class="project">
+      <a class="shot pitch" href="https://malaabi-b639a.web.app/" target="_blank" rel="noopener" aria-label="موقع ملعبي">
+        <span class="pitch-lines" aria-hidden="true"></span>
+        <span class="pitch-name">ملعبي</span>
+      </a>
+      <div class="info">
+        <p class="meta">03 · منتج · تطبيق Flutter قيد البناء</p>
+        <h3>ملعبي</h3>
+        <p>احجز الملعب، والقَ خصمك. كرة قدم وسلة وبادل. يبدأ من موقف يعرفه كل لاعب: ملعب فاضي بلا خصم، أو فريق جاهز بلا ملعب. الفرق تنشر تحديًا يحدد نوع المباراة ومستواها وموعدها وشروطها، وغيرها يقبله.</p>
+        <div class="links"><a href="https://malaabi-b639a.web.app/" target="_blank" rel="noopener">الموقع ↖</a></div>
+      </div>
+    </article>
+  </section>
+
   <section class="approach" id="manhaj">
     <header class="sec-head">
-      <p class="kicker">المنهج</p>
-      <h2>كيف أشتغل</h2>
+      <p class="kicker">الأدوات</p>
+      <h2>اللي بشتغل فيه</h2>
     </header>
-    <div class="principles">
-      <div class="principle">
-        <h3>العربية لغة أساسية</h3>
-        <p>لا لغة مترجَم إليها. الاتجاه والأرقام والخطوط وترتيب العناصر مصمَّمة لها من البداية، لا معكوسة عنها.</p>
-      </div>
-      <div class="principle">
-        <h3>الوصولية جزء من البناء</h3>
-        <p>لا مراجعة في آخر الطريق. حلقات التركيز تبقى، ونسب التباين تُقاس على الخلفية، وتفضيل تقليل الحركة محترَم.</p>
-      </div>
-      <div class="principle">
-        <h3>أبسط حل يفي بالغرض</h3>
-        <p>إطار العمل يثبت جدواه أو لا يُستخدم. داركم مبني بوحدات ES خام لأن هذا بالضبط ما احتاجه.</p>
-      </div>
-    </div>
     <dl class="stack">
       <div><dt>موبايل</dt><dd dir="ltr">Flutter · Dart</dd></div>
       <div><dt>ويب</dt><dd dir="ltr">React · TypeScript · Vite · Tailwind · Vanilla JS</dd></div>
@@ -314,6 +151,8 @@
 
 <footer class="foot"><span>© محمد الموصللي</span><span>مبني من الصفر — بلا إطار عمل وبلا خطوة بناء.</span></footer>
 
+<script src="vendor/three.min.js"></script>
+<script src="scene3d.js"></script>
 <script src="main.js"></script>
 </body>
 </html>
