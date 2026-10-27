@@ -2,7 +2,9 @@
 
 A recreation of the Ishikawa studio site from the reference reel. Open `index.html` in a browser; it works straight from the file, no server or build step.
 
-The hero is a real-time 3D scene built with Three.js: a concrete house with a bonsai courtyard, a cedar-slat corridor and a lit living room, on a forested plateau with a lake and mountains. Scrolling moves through five camera shots, and each cut dips to black:
+The hero walks you through a house in five shots. Scrolling dollies into each shot, then the shot rushes past you and blurs while the next grows in from the distance, like stepping through a doorway. Moving the mouse looks around the room: the view turns a few degrees in perspective and the headlines drift the other way. Touch screens get a slow sway instead.
+
+Each shot is a photo (see below). Under the photos is a real-time Three.js scene of the same house (a bonsai courtyard, a cedar-slat corridor and a lit living room on a forested plateau with a lake and mountains). It only shows for a shot whose photo is missing, and the mouse turns its camera too:
 
 1. Courtyard — *Architecture of Stillness.*
 2. The house against the mountains — *L'art de la retenue.*
@@ -21,8 +23,8 @@ The hero is a real-time 3D scene built with Three.js: a concrete house with a bo
 
 ## Photos
 
-`photos/1.jpg` to `5.jpg` are AI-generated in Figma (gemini-3.1-flash-image), one per shot in the order above. Each photo replaces the 3D view for its shot and slowly dollies in as you scroll; the 3D scene only shows for a shot whose photo is missing or fails to load. To swap one, replace the file with a landscape image with the subject right of centre (the headlines sit on the left), and adjust its `background-position` in `index.html` so phones crop toward the subject.
+`photos/1.jpg` to `5.jpg` are AI-generated in Figma (gemini-3.1-flash-image), one per shot in the order above. Each photo replaces the 3D view for its shot. To swap one, replace the file with a landscape image with the subject right of centre (the headlines sit on the left), and adjust its `background-position` in `index.html` so phones crop toward the subject.
 
 The project cards in `shots/` are 4:5 crops of the same photos, and `shots/poster.jpg` is photo 1, shown until the page is ready.
 
-With `prefers-reduced-motion`, the camera jumps between shots instead of easing and the idle drift is off.
+With `prefers-reduced-motion`, shots cut straight from one to the next with a dip to black, and the pointer look, sway and idle drift are off.

@@ -1,8 +1,8 @@
 /* The hero's 3D world: a concrete house with a bonsai courtyard, a wood-slat
    corridor and a lit interior, set on a forested plateau ringed by mountains.
-   Scroll progress (0..4) picks one of five camera shots; each shot dollies
-   slowly; opts.onFrame(p) gets the eased progress every frame so the page
-   can time the cuts between shots to the camera. */
+   Scroll progress (0..4) picks one of five camera shots, and each shot
+   dollies slowly. With opts.eased the page eases the progress itself and the
+   camera follows it exactly; setLook(x, y) turns the view toward the pointer. */
 (() => {
   const T = window.THREE;
 
@@ -436,6 +436,8 @@
 
     const camera = new T.PerspectiveCamera(42, 1, 0.1, 4000);
     const eye = new T.Vector3(), look = new T.Vector3();
+    const fwd = new T.Vector3(), side = new T.Vector3(), lift = new T.Vector3(), UP = new T.Vector3(0, 1, 0);
+    let lookX = 0, lookY = 0;
     let target = 0, current = 0, last = performance.now(), dirty = true, running = true;
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
     let hidden = false;
@@ -467,8 +469,16 @@
       }
       eye.y = Math.max(eye.y, heightAt(eye.x, eye.z) + 1.2);
       camera.position.copy(eye);
+      // turn the head toward the pointer: a few degrees either way, scaled to how far the target is
+      if (lookX || lookY) {
+        fwd.subVectors(look, eye);
+        const dist = fwd.length();
+        fwd.divideScalar(dist);
+        side.crossVectors(fwd, UP).normalize();
+        lift.crossVectors(side, fwd);
+        look.addScaledVector(side, lookX * dist * 0.08).addScaledVector(lift, -lookY * dist * 0.05);
+      }
       camera.lookAt(look);
-      if (opts.onFrame) opts.onFrame(p);
     }
 
     function frame(now) {
@@ -476,7 +486,7 @@
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
       const prev = current;
-      current = still ? target : current + (target - current) * Math.min(1, dt * 3.2);
+      current = still || opts.eased ? target : current + (target - current) * Math.min(1, dt * 3.2);
       if (Math.abs(current - prev) > 1e-5 || dirty || !still) {
         place(current, now);
         if (!hidden) renderer.render(scene, camera);
@@ -499,6 +509,11 @@
     return {
       setProgress(p) { target = p; },
       // while a photo covers the current shot there is no point drawing the scene under it
+      setLook(x, y) {
+        if (x === lookX && y === lookY) return;
+        lookX = x; lookY = y;
+        dirty = true;
+      },
       setHidden(h) {
         if (h === hidden) return;
         hidden = h;
