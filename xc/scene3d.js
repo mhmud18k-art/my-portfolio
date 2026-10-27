@@ -40,21 +40,58 @@
     for (let i = 0; i < 6; i++) { v += amp * (1 - Math.abs(noise(x * f, y * f) * 2 - 1)) ** 2; f *= 2.1; amp *= 0.5; }
     return v;
   }
+  // value noise with its derivatives, and an fbm that damps each octave where the slope is already
+  // steep: ridges stay sharp and the slopes between them read as worn by water and ice
+  const ND = [0, 0, 0];
+  function noised(x, y) {
+    const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy;
+    const ux = fx * fx * fx * (fx * (fx * 6 - 15) + 10), uy = fy * fy * fy * (fy * (fy * 6 - 15) + 10);
+    const dux = 30 * fx * fx * (fx * (fx - 2) + 1), duy = 30 * fy * fy * (fy * (fy - 2) + 1);
+    const a = hash(ix, iy), b = hash(ix + 1, iy), c = hash(ix, iy + 1), d = hash(ix + 1, iy + 1);
+    const k1 = b - a, k2 = c - a, k4 = a - b - c + d;
+    ND[0] = a + k1 * ux + k2 * uy + k4 * ux * uy; ND[1] = dux * (k1 + k4 * uy); ND[2] = duy * (k2 + k4 * ux);
+  }
+  function eroded(x, y) {
+    let a = 0, b = 0.5, dx = 0, dy = 0;
+    for (let i = 0; i < 9; i++) {
+      noised(x, y);
+      dx += ND[1]; dy += ND[2];
+      a += (b * ND[0]) / (1 + dx * dx + dy * dy);
+      b *= 0.5;
+      const nx = 1.6 * x - 1.2 * y; y = 1.2 * x + 1.6 * y; x = nx;
+    }
+    return a;
+  }
   // seeded, so the forest grows the same way on every load
   function rng(seed) { let s = (seed >>> 0) % 2147483647 || 1; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
 
   // ---------- the land ----------
   const LAKE = -14;
   const PLATEAU = [6, 2];
+  // the low sun's bearing, flattened onto the ground
+  const SUN_H = [-0.885, 0.465];
+  // the mountains ring the valley around this centre, rising from MOUNT_R
+  const MC = [-40, -60], MOUNT_R = 430;
+  function mountains(x, z) {
+    const dx = x - MC[0], dz = z - MC[1], r = Math.hypot(dx, dz);
+    if (r < MOUNT_R) return 0;
+    const ring = step(MOUNT_R, 900, r);
+    // the valley opens toward the setting sun, which is how the low light gets in
+    const toward = Math.max(0, (dx * SUN_H[0] + dz * SUN_H[1]) / r);
+    const open = 1 - 0.62 * smooth(clamp(toward * 1.4 - 0.2));
+    const e = eroded(x * 0.0017 + 7.3, z * 0.0017 - 2.1);
+    const crest = ridged(x * 0.0021 + 1.7, z * 0.0021 + 4.2);
+    const m = clamp(e * 0.95 + crest * 0.22 - 0.12, 0, 1.4);
+    return ring * open * (20 + 980 * m * m) * (0.55 + 0.45 * step(900, 1700, r));
+  }
   function baseHeight(x, z) {
     const r = Math.hypot(x - PLATEAU[0], z - PLATEAU[1]);
     const open = step(32, 80, r);                      // 0 on the plateau the house sits on
     let h = (fbm(x * 0.012 + 3, z * 0.012) - 0.45) * 34 * open;
     const lake = step(-70, -150, z) * (1 - step(-250, -320, z)) * (1 - step(160, 260, Math.abs(x)));
     h -= lake * 30 * open;
-    const ring = step(300, 560, Math.hypot(x, z * 0.85 + 60));
-    h += ring * (20 + ridged(x * 0.0038 + 7, z * 0.0038) * 230);
-    h += (fbm(x * 0.09 + 5, z * 0.09 - 3, 3) - 0.5) * 1.1 * step(22, 40, r);
+    h += mountains(x, z);
+    h += (fbm(x * 0.07 + 5, z * 0.07 - 3, 3) - 0.5) * 0.55 * step(22, 40, r);
     return h;
   }
 
@@ -110,24 +147,18 @@
   // where the meadow around the house gives way to forest: further out toward the low sun in the
   // west, so the house stands in light instead of in the forest's long shadows
   const MEADOW = 46;
-  const SUN_H = [-0.885, 0.465];
   const meadowAt = (x, z) => {
     const dx = x - PLATEAU[0], dz = z - PLATEAU[1], r = Math.hypot(dx, dz) || 1;
     return MEADOW + 48 * Math.max(0, (dx * SUN_H[0] + dz * SUN_H[1]) / r) ** 2;
   };
+  // where forest grows: patches in the valley, and on the mountains a belt on the gentler slopes
+  // below the tree line
+  const forestMask = (x, y, z, ny) => step(0.44, 0.56, forestAt(x, z)) *
+    (1 - step(150, 250, y + (fbm(x * 0.01, z * 0.01, 3) - 0.5) * 80)) * (1 - step(0.3, 0.5, 1 - ny));
   // the house's footprint, kept clear of trees, rocks and grass
   const inHouse = (x, z, pad = 0) => x > -21 - pad && x < 34 + pad && z > -12 - pad && z < 13 + pad;
 
   // ---------- geometry helpers ----------
-  function paint(g, fn) {
-    const P = g.attributes.position, N = g.attributes.normal, c = new Float32Array(P.count * 3);
-    for (let i = 0; i < P.count; i++) {
-      const v = fn(P.getX(i), P.getY(i), P.getZ(i), N ? N.getY(i) : 1);
-      c[i * 3] = v[0]; c[i * 3 + 1] = v[1]; c[i * 3 + 2] = v[2];
-    }
-    g.setAttribute('color', new T.BufferAttribute(c, 3));
-    return g;
-  }
   // concatenates geometries into one (positions, normals, colours)
   function merge(geos) {
     const parts = geos.map(g => (g.index ? g.toNonIndexed() : g));
@@ -158,41 +189,69 @@
     g.computeVertexNormals();
     return g;
   }
-  // a spruce of unit height: a trunk and a dozen drooping, frayed skirts of needles, darker inside
-  function spruce(seed, detail) {
+  // a spruce of unit height made of branch cards: whorls of drooping branches round a trunk, each
+  // branch two crossed cards carrying the photographed branch. Normals point out from the crown,
+  // so it shades as a mass rather than as flat cards, and colour darkens toward the trunk.
+  // aBark marks the trunk, which takes a bark colour instead of the texture.
+  function spruceCards(seed, light = false) {
     const R = rng(seed * 977 + 13);
-    const parts = [];
-    const trunk = new T.CylinderGeometry(0.009, 0.03, 1, detail ? 7 : 5, 1, true);
-    trunk.translate(0, 0.5, 0);
-    parts.push(paint(trunk, () => [0.05, 0.035, 0.025]));
-    const layers = detail ? 10 : 4, seg = detail ? 11 : 7, hseg = detail ? 2 : 1;
-    for (let i = 0; i < layers; i++) {
-      const f = i / (layers - 1);
-      const rad = (0.32 * Math.pow(1 - f, 0.95) + 0.035) * (0.88 + R() * 0.24);
-      const hh = (detail ? 0.16 : 0.3) * (1 - 0.45 * f) + 0.03;
-      const c = new T.ConeGeometry(rad, hh, seg, hseg, true);
-      const P = c.attributes.position, ph = R() * 10;
-      for (let k = 0; k < P.count; k++) {
-        let x = P.getX(k), y = P.getY(k), z = P.getZ(k);
-        const rr = Math.hypot(x, z) / rad, a = Math.atan2(z, x);
-        const fray = 0.78 + 0.42 * noise(a * 2.3 + ph, i * 3.1) + 0.1 * Math.sin(a * 7 + ph);
-        x *= fray; z *= fray;
-        y -= rr * rr * hh * 0.4;                         // the tips hang
-        P.setXYZ(k, x, y, z);
-      }
-      c.rotateY(R() * Math.PI * 2);
-      c.translate(0, 0.09 + f * 0.8 + hh / 2, 0);
-      c.computeVertexNormals();
-      parts.push(paint(c, (x, y, z) => {
-        // baked occlusion: dark near the trunk and low down, lighter at the tips and the crown
-        const v = mix(0.28, 1, clamp(Math.hypot(x, z) / (rad * 1.05))) * (0.55 + 0.45 * f);
-        return [0.07 * v, 0.11 * v, 0.052 * v];
-      }));
+    const pos = [], nor = [], uv = [], col = [], bark = [], idx = [];
+    const v3 = (x, y, z) => new T.Vector3(x, y, z);
+    const vert = (p, n, u, v, c, b) => { pos.push(p.x, p.y, p.z); nor.push(n.x, n.y, n.z); uv.push(u, v); col.push(c, c, c); bark.push(b); return pos.length / 3 - 1; };
+    // the trunk
+    const TS = light ? 4 : 7;
+    for (let i = 0; i <= TS; i++) {
+      const a = (i / TS) * Math.PI * 2, cx = Math.cos(a), cz = Math.sin(a);
+      vert(v3(cx * 0.028, 0, cz * 0.028), v3(cx, 0, cz), 0, 0, 1, 1);
+      vert(v3(cx * 0.006, 0.97, cz * 0.006), v3(cx, 0, cz), 0, 1, 1, 1);
+      if (i < TS) { const k = i * 2; idx.push(k, k + 2, k + 1, k + 1, k + 2, k + 3); }
     }
-    const top = new T.ConeGeometry(0.035, 0.12, 6, 1, true);
-    top.translate(0, 0.94, 0);
-    parts.push(paint(top, () => [0.05, 0.08, 0.042]));
-    return merge(parts);
+    const ASPECT = 0.61;                                   // the branch picture's width over its length
+    const card = (base, dir, len, tilt, droop, f) => {
+      const side0 = new T.Vector3().crossVectors(dir, v3(0, 1, 0)).normalize();
+      const up0 = new T.Vector3().crossVectors(side0, dir);
+      const side = side0.multiplyScalar(Math.cos(tilt)).addScaledVector(up0, Math.sin(tilt));
+      const w = len * ASPECT * (light ? 0.6 : 0.5), first = pos.length / 3, S = light ? 1 : 2;
+      for (let s = 0; s <= S; s++) {
+        const k = s / S;
+        const c = base.clone().addScaledVector(dir, len * k);
+        c.y -= droop * len * k * k;
+        // out from the crown and a little up
+        const n = v3(c.x, 0, c.z).normalize().multiplyScalar(0.8).add(v3(0, 0.55, 0)).normalize();
+        const ao = mix(0.5, 1, k) * (0.62 + 0.38 * f);
+        vert(c.clone().addScaledVector(side, -w), n, 0, k, ao, 0);
+        vert(c.clone().addScaledVector(side, w), n, 1, k, ao, 0);
+      }
+      for (let s = 0; s < S; s++) { const a = first + s * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+    };
+    // seen from afar a spruce needs only a few, wider cards, one per branch, tilted alternately
+    const whorls = light ? 7 : 12;
+    for (let i = 0; i < whorls; i++) {
+      const f = i / (whorls - 1);
+      const y = 0.1 + f * 0.8 + (R() - 0.5) * 0.02;
+      const len = (0.4 * Math.pow(1 - f, 0.85) + 0.07) * (0.85 + R() * 0.3);
+      const count = light ? (f > 0.8 ? 3 : 4) : f > 0.82 ? 4 : 5 + ((R() * 2) | 0);
+      for (let k = 0; k < count; k++) {
+        const a = (k / count) * Math.PI * 2 + i * 0.9 + R() * 0.5;
+        const pitch = -0.15 - (1 - f) * 0.25 + (R() - 0.5) * 0.1;      // lower branches slope down more
+        const dir = v3(Math.cos(a), pitch, Math.sin(a)).normalize();
+        const base = v3(Math.cos(a) * 0.015, y, Math.sin(a) * 0.015);
+        const droop = 0.18 + (1 - f) * 0.22;
+        card(base, dir, len, light ? (k % 2 ? 0.6 : -0.6) : 0.55, droop, f);
+        if (!light) card(base, dir, len, -0.55, droop, f);
+      }
+    }
+    // the leader at the top
+    card(v3(0, 0.86, 0), v3(0.02, 1, 0).normalize(), 0.14, 0, 0, 1);
+    card(v3(0, 0.86, 0), v3(0.02, 1, 0).normalize(), 0.14, Math.PI / 2, 0, 1);
+    const g = new T.BufferGeometry();
+    g.setAttribute('position', new T.Float32BufferAttribute(pos, 3));
+    g.setAttribute('normal', new T.Float32BufferAttribute(nor, 3));
+    g.setAttribute('uv', new T.Float32BufferAttribute(uv, 2));
+    g.setAttribute('color', new T.Float32BufferAttribute(col, 3));
+    g.setAttribute('aBark', new T.Float32BufferAttribute(bark, 1));
+    g.setIndex(idx);
+    return g;
   }
   // a low tuft of grass blades, unit height
   function tuft() {
@@ -296,13 +355,6 @@
     g.fillStyle = 'rgba(225,220,205,.55)';
     g.fillRect(0.055 * s, 0, 3, s); g.fillRect(0.945 * s - 3, 0, 3, s);
   });
-  const grainTex = canvasTex(256, (g, s) => {
-    g.fillStyle = '#fff'; g.fillRect(0, 0, s, s);
-    for (let i = 0; i < 7000; i++) {
-      g.fillStyle = `rgba(0,0,0,${0.05 + hash(i, 41) * 0.2})`;
-      g.fillRect(hash(i, 42) * s, hash(i, 43) * s, 1 + hash(i, 44) * 2, 1 + hash(i, 45) * 3);
-    }
-  });
   // ripples for the lake, as a tangent-space normal map
   const rippleTex = canvasTex(256, (g, s) => {
     const img = g.createImageData(s, s);
@@ -345,7 +397,7 @@
   T.ShaderChunk.fog_fragment = `#ifdef USE_FOG
     float fogDist = length(vFogDir);
     float fogMid = cameraPosition.y + vFogDir.y * .5 - (${LAKE.toFixed(1)});
-    float fogAmt = 1. - exp(-fogDist * .0016 * exp(-max(fogMid, 0.) / 110.));
+    float fogAmt = 1. - exp(-fogDist * (.0010 * exp(-max(fogMid, 0.) / 90.) + .00011));
     gl_FragColor.rgb = mix(gl_FragColor.rgb, horizonAt(vFogDir) * .85, fogAmt * fogAmt * (3. - 2. * fogAmt));
   #endif`;
   const skyMaterial = () => new T.ShaderMaterial({
@@ -419,6 +471,109 @@
     };
   }
 
+  // ---------- photographed surfaces ----------
+  // the textures (textures/textures.js, photographed and made tileable) once they have loaded
+  const TX = {};
+  // world position and normal, for texturing by where a surface is rather than by its UVs
+  const WORLD_VARYINGS_VS = `#include <worldpos_vertex>
+    vec4 wPos = vec4(transformed, 1.); vec3 wNrm = objectNormal;
+    #ifdef USE_INSTANCING
+      wPos = instanceMatrix * wPos; wNrm = mat3(instanceMatrix) * wNrm;
+    #endif
+    vWP = (modelMatrix * wPos).xyz; vWN = normalize(mat3(modelMatrix) * wNrm);`;
+  const SURFACE_GLSL = `varying vec3 vWP; varying vec3 vWN;
+    float gh(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+    float gn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
+      return mix(mix(gh(i), gh(i + vec2(1, 0)), f.x), mix(gh(i + vec2(0, 1)), gh(i + vec2(1, 1)), f.x), f.y); }
+    // a texture projected along the three axes and blended by the surface's facing
+    vec3 tri(sampler2D t, vec3 p, vec3 w){ return texture2D(t, p.zy).rgb * w.x + texture2D(t, p.xz).rgb * w.y + texture2D(t, p.xy).rgb * w.z; }
+    // the same, blurred by reading smaller mip levels: for heights, whose slopes must stay gentle
+    float triH(sampler2D t, vec3 p, vec3 w, float b){ return dot(texture2D(t, p.zy, b).rgb * w.x + texture2D(t, p.xz, b).rgb * w.y + texture2D(t, p.xy, b).rgb * w.z, vec3(.33)); }`;
+  // the colour code may set gH, a height in metres-ish, which then bumps the shading normal: the
+  // rock's cracks and gullies catch the low light instead of being only painted on
+  function worldShaded(material, uniforms, fragmentCode) {
+    material.extensions = { derivatives: true };
+    material.onBeforeCompile = sh => {
+      Object.assign(sh.uniforms, uniforms);
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP; varying vec3 vWN;')
+        .replace('#include <worldpos_vertex>', WORLD_VARYINGS_VS);
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D tRock, tMeadow, tForest;\n' + SURFACE_GLSL)
+        .replace('void main() {', 'void main() {\n  float gH = 0.;')
+        .replace('#include <color_fragment>', fragmentCode)
+        .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+          {
+            vec3 sx = dFdx(-vViewPosition), sy = dFdy(-vViewPosition);
+            vec3 r1 = cross(sy, normal), r2 = cross(normal, sx);
+            float det = dot(sx, r1);
+            vec3 grad = sign(det) * (dFdx(gH) * r1 + dFdy(gH) * r2);
+            normal = normalize(abs(det) * normal - grad);
+          }`);
+    };
+    return material;
+  }
+  // the ground: meadow, forest floor, trodden verges, scree, rock where it's steep and snow up high,
+  // each photographed texture sampled at two scales so its tiling never shows; vertex colour carries
+  // (forest, verge, light)
+  function groundMaterial() {
+    return worldShaded(new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, envMapIntensity: 0.25 }),
+      { tRock: { value: TX.rock }, tMeadow: { value: TX.meadow }, tForest: { value: TX.forest } }, `
+      vec3 gN = normalize(vWN);
+      float slope = 1. - gN.y;
+      vec3 tw = pow(abs(gN), vec3(6.)); tw /= tw.x + tw.y + tw.z;
+      float dist = length(vWP - cameraPosition), alt = vWP.y;
+      vec2 gp = vWP.xz;
+      float n1 = gn(gp / 23.), n2 = gn(gp / 97.), n3 = gn(gp / 7.);
+      vec3 rockNear = mix(tri(tRock, vWP / 9., tw), tri(tRock, vWP / 47., tw), .45);
+      // seen from afar the same rock, very large, reads as gullies and cliff bands
+      vec3 rockFar = tri(tRock, vWP / 190., tw);
+      float farK = smoothstep(150., 900., dist);
+      vec3 rock = mix(rockNear, mix(rockNear, rockFar, .65), farK);
+      float rl = dot(rock, vec3(.3, .59, .11));
+      rock = mix(vec3(rl), rock, .55) * mix(vec3(1.), vec3(1.1, 1.02, .92), n2);     // greyer, warmer in places
+      float macro = dot(tri(tRock, vWP / 420., tw), vec3(.33));
+      rock *= mix(.62, 1.18, smoothstep(.2, .7, macro));                             // darker and lighter rock
+      vec3 meadow = mix(texture2D(tMeadow, gp / 4.).rgb, texture2D(tMeadow, gp / 26.).rgb, .5);
+      meadow *= mix(vec3(1.06, 1., .86), vec3(.86, .98, .86), n1 * .7 + n3 * .3);
+      vec3 floorC = mix(texture2D(tForest, gp / 3.5).rgb, texture2D(tForest, gp / 21.).rgb, .4);
+      // far off, forest is seen as its canopy, not its floor
+      vec3 forestC = mix(floorC * .75, meadow * vec3(.2, .28, .18), smoothstep(200., 650., dist));
+      vec3 g = mix(meadow, forestC, vColor.r);
+      g = mix(g, floorC * vec3(.95, .85, .75) * .85, vColor.g);
+      // alpine grass thins out to scree with height
+      g = mix(g, rock * 1.05, smoothstep(130., 290., alt + (n2 - .5) * 90.) * (1. - vColor.r));
+      float rk = smoothstep(.3, .55, slope + (n1 - .5) * .25);
+      g = mix(g, rock * mix(1., .7, smoothstep(.55, .85, slope)), rk);              // cliffs darker than scree
+      float rockAmt = max(rk, smoothstep(130., 290., alt));
+      gH = ((triH(tRock, vWP / 420., tw, 3.) * 22. + triH(tRock, vWP / 190., tw, 2.5) * 5.) * farK
+        + triH(tRock, vWP / 9., tw, 1.) * .8 * (1. - farK)) * rockAmt;
+      g = mix(g, rock * vec3(.5, .47, .42), smoothstep(${(LAKE + 3.5).toFixed(1)}, ${(LAKE + 1.2).toFixed(1)}, alt));
+      // snow on the higher, gentler ground, thinning out on steep faces
+      float line = 340. + (n2 - .5) * 150.;
+      float sn = smoothstep(line, line + 70., alt) * (1. - smoothstep(.5, .82, slope + (n3 - .5) * .3 + (macro - .45) * .4));
+      g = mix(g, vec3(.82, .86, .92) * (.92 + .08 * n3), sn);
+      diffuseColor.rgb *= g * vColor.b;`);
+  }
+  // boulders and the courtyard stone: the photographed rock, mossy where it faces the sky
+  function stoneMaterial() {
+    return worldShaded(new T.MeshStandardMaterial({ roughness: 0.88, envMapIntensity: 0.3 }), { tRock: { value: TX.rock } }, `
+      vec3 sN = normalize(vWN);
+      vec3 sw = pow(abs(sN), vec3(4.)); sw /= sw.x + sw.y + sw.z;
+      vec3 rc = mix(tri(tRock, vWP / 1.7, sw), tri(tRock, vWP / 6.5, sw), .35);
+      float moss = smoothstep(.55, .9, sN.y + (gn(vWP.xz * 1.3) - .5) * .35);
+      diffuseColor.rgb *= mix(rc, rc * vec3(.5, .72, .3), moss * .8) * 1.1;
+      gH = dot(tri(tRock, vWP / 1.7, sw), vec3(.33)) * .06;`);
+  }
+
+  function barkMaterial() {
+    return worldShaded(new T.MeshStandardMaterial({ roughness: 0.92, envMapIntensity: 0.25 }), { tRock: { value: TX.rock } }, `
+      vec3 bN = normalize(vWN);
+      vec3 bw = pow(abs(bN), vec3(4.)); bw /= bw.x + bw.y + bw.z;
+      vec3 p = vWP * vec3(5., 1.6, 5.);
+      float l = dot(tri(tRock, p, bw), vec3(.33));
+      diffuseColor.rgb *= vec3(.3, .2, .13) * (.45 + l * 1.1);
+      gH = l * .025;`);
+  }
+
   // ---------- post-processing: bloom, filmic tone mapping, grade, vignette, grain ----------
   const QUAD_VS = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }';
   const BRIGHT_FS = `uniform sampler2D tex; varying vec2 vUv;
@@ -479,16 +634,32 @@
     });
 
     let ready = false, onReady = null, path = null, segs = null, skyU = null;
+    const sunView = { value: new T.Vector3() };
     // the house's boxes, as [x0, y0, z0, x1, y1, z1], for checking the camera never passes through one
     const solids = [];
     const water = { tex: rippleTex };
 
+    // the photographed textures, decoded before anything is built
+    function loadTextures() {
+      const src = window.TEXTURES || {}, loader = new T.TextureLoader();
+      return Promise.all(['rock', 'meadow', 'forest', 'branch'].map(k => new Promise((resolve, reject) => {
+        if (!src[k]) { reject(new Error('missing texture ' + k)); return; }
+        loader.load(src[k], tex => {
+          tex.colorSpace = T.SRGBColorSpace;
+          tex.wrapS = tex.wrapT = k === 'branch' ? T.ClampToEdgeWrapping : T.RepeatWrapping;
+          tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+          TX[k] = tex;
+          resolve();
+        }, undefined, reject);
+      })));
+    }
     // heavy work waits a moment so the page paints (with its poster) first
-    setTimeout(() => {
-      try { build(); } catch (e) { console.error(e); if (opts.onFail) opts.onFail(); return; }
+    const fail = e => { console.error(e); if (opts.onFail) opts.onFail(); };
+    setTimeout(() => loadTextures().then(() => {
+      try { build(); } catch (e) { fail(e); return; }
       ready = true;
       if (onReady) onReady();
-    }, 30);
+    }, fail), 30);
 
     // ---------- the world ----------
     let sun;
@@ -504,12 +675,12 @@
         glass: new T.MeshStandardMaterial({ color: lin(0.16, 0.2, 0.22), roughness: 0.03, metalness: 0, transparent: true, depthWrite: false }),
         led: new T.MeshBasicMaterial({ color: lin(7, 4.2, 2.1) }),
         warmPanel: new T.MeshBasicMaterial({ color: lin(1.6, 0.95, 0.5) }),
-        trunk: new T.MeshStandardMaterial({ color: lin(0.07, 0.05, 0.035), roughness: 0.9 }),
-        leaf: new T.MeshStandardMaterial({ color: lin(0.07, 0.13, 0.045), roughness: 0.85 }),
-        rockCourt: new T.MeshStandardMaterial({ color: lin(0.42, 0.4, 0.36), roughness: 0.75 }),
+
         road: new T.MeshStandardMaterial({ map: asphaltTex, roughness: 0.82, color: lin(0.9, 0.9, 0.9) }),
         veg: new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: T.DoubleSide }),
-        stone: new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.85 }),
+        // spruces built of photographed branches: cut out by the picture's alpha, smoothed at the edge
+        // by multisampling, with outward normals on both faces and the low sun glowing through them
+        needles: new T.MeshStandardMaterial({ map: TX.branch, alphaTest: 0.5, alphaToCoverage: true, side: T.DoubleSide, vertexColors: true, roughness: 0.9 }),
         lake: new T.MeshStandardMaterial({ color: lin(0.012, 0.025, 0.035), roughness: 0.14, metalness: 0, normalMap: water.tex, normalScale: new T.Vector2(0.08, 0.08) }),
       };
       // the sky is for the glass and the water to reflect; everything else takes only a hint of it
@@ -521,6 +692,30 @@
           diffuseColor.a = mix(.22, .92, fres);
           #include <opaque_fragment>`);
       };
+      M.stone = stoneMaterial();
+      M.bark = barkMaterial();
+      M.needlesFar = M.needles.clone();
+      M.needlesFar.alphaTest = 0.3;
+      M.needles.onBeforeCompile = sh => {
+        sh.uniforms.uTime = uTime;
+        sh.uniforms.uSunView = sunView;
+        sh.vertexShader = 'uniform float uTime;\nattribute float aBark;\nvarying float vBark;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+          vBark = aBark;
+          #ifdef USE_INSTANCING
+            vec2 ip = instanceMatrix[3].xz;
+          #else
+            vec2 ip = vec2(0.);
+          #endif
+          float gust = sin(uTime * 1.1 + ip.x * 0.07 + ip.y * 0.05) * 0.6 + sin(uTime * 2.3 + ip.x * 0.17) * 0.25;
+          transformed.xz += gust * position.y * position.y * vec2(0.012, 0.008) + gust * (1. - aBark) * 0.004 * vec2(sin(position.y * 40.), cos(position.y * 37.));`);
+        sh.fragmentShader = 'uniform vec3 uSunView;\nvarying float vBark;\n' + sh.fragmentShader
+          .replace('#include <map_fragment>', '#include <map_fragment>\nif (vBark > .5) diffuseColor = vec4(.085, .06, .042, 1.);')
+          .replace('float faceDirection = gl_FrontFacing ? 1.0 : - 1.0;', 'float faceDirection = 1.0;')
+          .replace('#include <opaque_fragment>', `float through = pow(max(dot(normalize(-vViewPosition), uSunView), 0.), 6.) * (1. - vBark);
+            outgoingLight += diffuseColor.rgb * vec3(1., .72, .42) * through * 1.3;
+            #include <opaque_fragment>`);
+      };
+      M.needlesFar.onBeforeCompile = M.needles.onBeforeCompile;
       // trees and grass move a little in the air
       M.veg.onBeforeCompile = sh => {
         sh.uniforms.uTime = uTime;
@@ -553,51 +748,117 @@
       sun.shadow.bias = -0.0005;
       sun.shadow.normalBias = 0.07;
       sun.shadow.camera.near = 1;
-      sun.shadow.camera.far = 1200;
+      sun.shadow.camera.far = 3400;
       scene.add(sun, sun.target);
 
-      // terrain: one grid, fine where the journey runs and coarse toward the mountains
+      // terrain: the valley floor as one even grid, and the mountains as a ring of their own in polar
+      // steps that grow with distance, so far peaks keep their shape without spending vertices on them
+      const SQ = [-60, -40], HALF = 500;
+      const R0 = MOUNT_R + 25, R1 = 2600, NA = high ? 720 : 400, NR = high ? 220 : 130;
+      const ringRadius = j => R0 * Math.pow(R1 / R0, j / NR);
+      const ringH = new Float32Array((NA + 1) * (NR + 1));
+      for (let j = 0; j <= NR; j++) {
+        const r = ringRadius(j);
+        for (let i = 0; i <= NA; i++) {
+          const a = (i / NA) * Math.PI * 2;
+          ringH[j * (NA + 1) + i] = heightAt(MC[0] + Math.cos(a) * r, MC[1] + Math.sin(a) * r);
+        }
+      }
+      const LOG = Math.log(R1 / R0);
+      const ringSample = (x, z) => {
+        const dx = x - MC[0], dz = z - MC[1], r = Math.hypot(dx, dz);
+        if (r < R0 || r >= R1) return -1e9;
+        const fj = (Math.log(r / R0) / LOG) * NR;
+        let fa = Math.atan2(dz, dx) / (Math.PI * 2);
+        if (fa < 0) fa += 1;
+        fa *= NA;
+        const j = Math.min(NR - 1, fj | 0), i = Math.min(NA - 1, fa | 0), tj = fj - j, ti = fa - i, k = j * (NA + 1) + i;
+        return mix(mix(ringH[k], ringH[k + 1], ti), mix(ringH[k + NA + 1], ringH[k + NA + 2], ti), tj);
+      };
+      // how much of the low sun gets past the peaks between a point and the sun
+      const tanSun = SUN.y / Math.hypot(SUN.x, SUN.z);
+      const sunVisible = (x, y, z) => {
+        let vis = 1;
+        for (let k = 0, d = 8; k < 30; k++, d *= 1.2) {
+          const hs = ringSample(x + SUN_H[0] * d, z + SUN_H[1] * d);
+          if (hs > -1e8) vis = Math.min(vis, clamp((y + d * tanSun - hs) / (d * 0.04 + 4) + 0.5));
+          if (vis <= 0) break;
+        }
+        return vis;
+      };
+      // per vertex: how much forest, how much trodden verge, and the light (occlusion and the sun)
+      const paintGround = (x, y, z, ny, cav, out, o) => {
+        const r = Math.hypot(x - PLATEAU[0], z - PLATEAU[1]), mr = meadowAt(x, z);
+        out[o] = forestMask(x, y, z, ny) * step(mr - 6, mr + 10, r);
+        const rd = roadNear(x, z);
+        out[o + 1] = rd ? 1 - step(ROAD_HALF + 0.5, ROAD_HALF + 2.5, rd.d) : 0;
+        out[o + 2] = clamp(1 - Math.max(cav, 0) * 1.2, 0.55, 1) * (1 - out[o] * 0.25) * (0.3 + 0.7 * sunVisible(x, y, z));
+      };
+      const groundMat = groundMaterial();
       {
-        const seg = high ? 400 : 260;
-        const g = new T.PlaneGeometry(2, 2, seg, seg);
+        const seg = high ? 400 : 240, row = seg + 1;
+        const g = new T.PlaneGeometry(HALF * 2, HALF * 2, seg, seg);
         g.rotateX(-Math.PI / 2);
-        const P = g.attributes.position, UV = g.attributes.uv, n = P.count;
-        const CX = -95, CZ = -55, W = 1400;
-        const warp = u => W * (0.12 * u + 0.88 * u * u * u);
+        const P = g.attributes.position, n = P.count;
         for (let i = 0; i < n; i++) {
-          const x = CX + warp(P.getX(i)), z = CZ + warp(P.getZ(i));
+          const x = SQ[0] + P.getX(i), z = SQ[1] + P.getZ(i);
           P.setXYZ(i, x, heightAt(x, z), z);
-          UV.setXY(i, x / 7, z / 7);
         }
         g.computeVertexNormals();
-        const N = g.attributes.normal, col = new Float32Array(n * 3), row = seg + 1;
+        const N = g.attributes.normal, col = new Float32Array(n * 3), sp = (HALF * 2) / seg;
         for (let i = 0; i < n; i++) {
-          const x = P.getX(i), y = P.getY(i), z = P.getZ(i), ny = N.getY(i);
-          const r = Math.hypot(x - PLATEAU[0], z - PLATEAU[1]);
-          let c = new T.Color(0.15, 0.18, 0.065).lerp(new T.Color(0.27, 0.22, 0.09), fbm(x * 0.04, z * 0.04, 3) * 0.9);
-          const mr = meadowAt(x, z);
-          const forest = step(0.44, 0.56, forestAt(x, z)) * step(mr - 6, mr + 10, r);
-          c.lerp(new T.Color(0.045, 0.05, 0.03), forest * 0.85);
-          if (y < LAKE + 3) c.lerp(new T.Color(0.12, 0.1, 0.075), 0.8);
-          c.lerp(new T.Color(0.15, 0.145, 0.14), step(0.18, 0.45, 1 - ny) * step(18, 60, y) + step(70, 140, y) * 0.6);
-          c.lerp(new T.Color(0.8, 0.82, 0.85), step(150 + fbm(x * 0.02, z * 0.02, 3) * 60, 195, y) * step(0.55, 0.75, ny));
-          const rd = roadNear(x, z);
-          if (rd) c.lerp(new T.Color(0.2, 0.185, 0.16), 1 - step(ROAD_HALF + 0.5, ROAD_HALF + 2.5, rd.d));
-          // baked occlusion: hollows and the forest floor are darker
-          const col0 = i % row, row0 = (i / row) | 0;
+          const c0 = i % row, r0 = (i / row) | 0, y = P.getY(i);
           let cav = 0;
-          if (col0 > 0 && col0 < seg && row0 > 0 && row0 < seg) {
-            const hs = (P.getY(i - 1) + P.getY(i + 1) + P.getY(i - row) + P.getY(i + row)) / 4;
-            const sp = Math.max(0.5, Math.abs(P.getX(i + 1) - P.getX(i - 1)) / 2);
-            cav = (hs - y) / sp;
-          }
-          c.multiplyScalar(clamp(1 - Math.max(cav, 0) * 1.2, 0.55, 1) * (1 - forest * 0.3));
-          col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+          if (c0 > 0 && c0 < seg && r0 > 0 && r0 < seg) cav = ((P.getY(i - 1) + P.getY(i + 1) + P.getY(i - row) + P.getY(i + row)) / 4 - y) / sp;
+          paintGround(P.getX(i), y, P.getZ(i), N.getY(i), cav, col, i * 3);
         }
         g.setAttribute('color', new T.BufferAttribute(col, 3));
-        const terrain = new T.Mesh(g, new T.MeshStandardMaterial({ vertexColors: true, map: grainTex, roughness: 1, envMapIntensity: 0.25 }));
-        terrain.receiveShadow = true;
-        scene.add(terrain);
+        g.deleteAttribute('uv');
+        const valley = new T.Mesh(g, groundMat);
+        valley.receiveShadow = true;
+        scene.add(valley);
+      }
+      {
+        const cols = NA + 1, n = cols * (NR + 1), P = new Float32Array(n * 3), idx = [];
+        for (let j = 0; j <= NR; j++) {
+          const r = ringRadius(j);
+          for (let i = 0; i <= NA; i++) {
+            const a = (i / NA) * Math.PI * 2, x = MC[0] + Math.cos(a) * r, z = MC[1] + Math.sin(a) * r, k = j * cols + i;
+            let y = ringH[k];
+            // where the valley grid already covers the ground, tuck the ring under it
+            const inside = Math.min(HALF - Math.abs(x - SQ[0]), HALF - Math.abs(z - SQ[1]));
+            if (inside > 0) y -= step(0, 14, inside) * 6;
+            P[k * 3] = x; P[k * 3 + 1] = y; P[k * 3 + 2] = z;
+            // wound counter-clockwise seen from above, so the surface faces up
+            if (j < NR && i < NA) idx.push(k, k + 1, k + cols, k + 1, k + cols + 1, k + cols);
+          }
+        }
+        const g = new T.BufferGeometry();
+        g.setAttribute('position', new T.BufferAttribute(P, 3));
+        g.setIndex(idx);
+        g.computeVertexNormals();
+        // the first and last meridians are the same line; give them one normal so no seam shows
+        const N = g.attributes.normal;
+        for (let j = 0; j <= NR; j++) {
+          const a = j * cols, b = a + NA;
+          const nx = N.getX(a) + N.getX(b), ny = N.getY(a) + N.getY(b), nz = N.getZ(a) + N.getZ(b), l = Math.hypot(nx, ny, nz);
+          N.setXYZ(a, nx / l, ny / l, nz / l); N.setXYZ(b, nx / l, ny / l, nz / l);
+        }
+        const col = new Float32Array(n * 3);
+        for (let j = 0; j <= NR; j++) for (let i = 0; i <= NA; i++) {
+          const k = j * cols + i, y = P[k * 3 + 1];
+          let cav = 0;
+          if (j > 0 && j < NR) {
+            const l = i > 0 ? k - 1 : k + NA - 1, rr = i < NA ? k + 1 : k - NA + 1;
+            const sp = ringRadius(j) * (LOG / NR);
+            cav = ((P[l * 3 + 1] + P[rr * 3 + 1] + P[(k - cols) * 3 + 1] + P[(k + cols) * 3 + 1]) / 4 - y) / sp;
+          }
+          paintGround(P[k * 3], y, P[k * 3 + 2], N.getY(k), cav, col, k * 3);
+        }
+        g.setAttribute('color', new T.BufferAttribute(col, 3));
+        const ring = new T.Mesh(g, groundMat);
+        ring.receiveShadow = true;
+        scene.add(ring);
       }
 
       // the lake, with moving ripples
@@ -685,6 +946,8 @@
         const x = gx + (R() - 0.5) * cell * 0.9, z = gz + (R() - 0.5) * cell * 0.9;
         const r = Math.hypot(x - PLATEAU[0], z - PLATEAU[1]);
         if (r < meadowAt(x, z) + R() * 14) continue;
+        // the mountains' own forest is planted further down
+        if (Math.hypot(x - MC[0], z - MC[1]) > MOUNT_R + 20) continue;
         if (forestAt(x, z) < 0.45 + R() * 0.06) continue;
         const y = heightAt(x, z);
         if (y < LAKE + 1.8 || y > 125) continue;
@@ -706,7 +969,7 @@
         for (let v = 0; v < 3; v++) { far.push(...near[v].filter(t => !keep.has(t))); near[v] = near[v].filter(t => keep.has(t)); }
       }
       // trees go in in patches of forest, so the patches behind the camera are never drawn
-      const plant = (geo, list, shadows, patch) => {
+      const plant = (geo, list, shadows, patch, material) => {
         const groups = new Map();
         for (const t of list) {
           const key = Math.floor(t.x / patch) + ',' + Math.floor(t.z / patch);
@@ -714,7 +977,7 @@
           groups.get(key).push(t);
         }
         for (const group of groups.values()) {
-          const mesh = new T.InstancedMesh(geo, M.veg, group.length);
+          const mesh = new T.InstancedMesh(geo, material, group.length);
           group.forEach((t, i) => {
             q.setFromEuler(e.set((R() - 0.5) * 0.05, t.rot, (R() - 0.5) * 0.05));
             m4.compose(p3.set(t.x, t.y - 0.25, t.z), q, sc.set(t.H * t.w, t.H, t.H * t.w));
@@ -726,20 +989,36 @@
           scene.add(mesh);
         }
       };
-      near.forEach((list, v) => plant(spruce(v + 1, true), list, true, 70));
-      plant(spruce(9, false), far, false, 300);
+      near.forEach((list, v) => plant(spruceCards(v + 1), list, true, 70, M.needles));
+      // forest on the mountains' lower slopes, light trees seen only from afar
+      for (let gx = -1500; gx < 1300; gx += high ? 20 : 34) for (let gz = -1500; gz < 1300; gz += high ? 20 : 34) {
+        const x = gx + (R() - 0.5) * 16, z = gz + (R() - 0.5) * 16;
+        const r = Math.hypot(x - MC[0], z - MC[1]);
+        if (r < MOUNT_R + 20 || r > 1500) continue;
+        const y = heightAt(x, z), ny = 1 / Math.hypot(1, (heightAt(x + 3, z) - y) / 3, (heightAt(x, z + 3) - y) / 3);
+        if (forestMask(x, y, z, ny) < 0.5 + R() * 0.3) continue;
+        far.push({ x, y, z, H: 16 + R() * 12, w: 0.9 + R() * 0.3, rot: R() * Math.PI * 2, c: 0.7 + R() * 0.4, hue: R() });
+      }
+      plant(spruceCards(9, true), far, false, 300, M.needlesFar);
 
       // boulders, mossy on top, along the road, the shore and the meadow's edge
-      const rockGeo = [0, 1].map(k => {
-        const g = lump(20, 0.5, 30 + k * 7, 1.2);
-        g.scale(1, 0.62, 1);
+      const rockGeo = [0, 1, 2].map(k => {
+        const g = new T.IcosahedronGeometry(1, 4);
+        const P = g.attributes.position, v = new T.Vector3();
+        for (let i = 0; i < P.count; i++) {
+          v.fromBufferAttribute(P, i);
+          // broken faces: fracture planes cut through a lumpy core
+          let s = 0.82 + fbm(v.x * 1.4 + k * 9, v.y * 1.4 + v.z * 1.1, 4) * 0.32;
+          s -= Math.max(0, ridged(v.x * 0.9 + k * 3, v.z * 0.9 - v.y * 0.7) - 0.75) * 0.5;
+          v.multiplyScalar(s);
+          if (v.y < -0.15) v.y = -0.15 + (v.y + 0.15) * 0.25;
+          v.y *= 0.65;
+          P.setXYZ(i, v.x, v.y, v.z);
+        }
         g.computeVertexNormals();
-        return paint(g, (x, y, z, ny) => {
-          const moss = step(0.55, 0.85, ny);
-          return [mix(0.16, 0.06, moss), mix(0.155, 0.09, moss), mix(0.145, 0.035, moss)];
-        });
+        return g;
       });
-      const rocks = [[], []];
+      const rocks = [[], [], []];
       for (let i = 0; i < 2600 && rocks[0].length + rocks[1].length < (high ? 260 : 120); i++) {
         const s = R(), side = R() < 0.5 ? -1 : 1;
         let x, z;
@@ -755,7 +1034,7 @@
         const rd = roadNear(x, z), size = 0.4 + R() ** 2 * 2.2;
         if (rd && rd.d < ROAD_HALF + 1.5 + size) continue;
         if (fromPath(x, z, 6) < size + 1.5) continue;
-        rocks[i % 2].push({ x, y, z, size, rot: R() * 6.28 });
+        rocks[i % 3].push({ x, y, z, size, rot: R() * 6.28 });
       }
       rocks.forEach((list, k) => {
         if (!list.length) return;
@@ -925,22 +1204,40 @@
           }
         }
         g.computeVertexNormals();
-        const m = new T.Mesh(g, M.trunk);
+        const m = new T.Mesh(g, M.bark);
         m.castShadow = m.receiveShadow = true;
         tree.add(m);
       };
+      // a pad is a cloud-pruned layer of short needle sprays: cards lying roughly flat across an
+      // ellipsoid, lit as a mass from the pad's centre and darker underneath
       const pad = (x, y, z, sx, sy, sz, seed) => {
-        const parts = [];
-        for (let i = 0; i < 12; i++) {
-          const a = (i / 12) * Math.PI * 2 + hash(seed, i) * 0.8, r = i === 0 ? 0 : 0.4 + hash(i, seed) * 0.5;
-          const g = lump(16, 0.55, seed * 7 + i);
-          const k = 0.36 + hash(seed + i, 3) * 0.24;
-          g.scale(k, k * 0.7, k);
-          g.translate(Math.cos(a) * r, (hash(i, seed + 5) - 0.3) * 0.25, Math.sin(a) * r);
-          parts.push(g);
+        const R = rng(seed * 131 + 5), pos = [], nor = [], uv = [], col = [], idx = [];
+        const n = high ? 46 : 28, up = new T.Vector3(0, 1, 0);
+        for (let i = 0; i < n; i++) {
+          const a = R() * Math.PI * 2, rr = Math.sqrt(R());
+          const c = new T.Vector3(Math.cos(a) * rr * sx, (R() - 0.35) * sy * 0.9, Math.sin(a) * rr * sz);
+          const yaw = R() * Math.PI * 2, len = 0.38 + R() * 0.22;
+          const d = new T.Vector3(Math.cos(yaw), (R() - 0.5) * 0.5, Math.sin(yaw)).normalize();
+          const side = new T.Vector3().crossVectors(d, up).normalize();
+          side.applyAxisAngle(d, (R() - 0.5) * 1.2);                 // tilted, never quite flat
+          const nrm = new T.Vector3(c.x / sx, c.y / sy * 0.6 + 0.9, c.z / sz).normalize();
+          const shade = 0.55 + 0.45 * clamp(c.y / sy + 0.5);
+          const b = pos.length / 3, half = len * 0.61 * 0.5;
+          for (const [k, s] of [[0, -1], [0, 1], [1, -1], [1, 1]]) {
+            const p = c.clone().addScaledVector(d, (k - 0.5) * len).addScaledVector(side, s * half);
+            pos.push(p.x, p.y, p.z); nor.push(nrm.x, nrm.y, nrm.z); uv.push(s < 0 ? 0 : 1, k); col.push(shade, shade, shade);
+          }
+          idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2);
         }
-        const m = new T.Mesh(merge(parts), M.leaf);
-        m.position.set(x, y, z); m.scale.set(sx, sy * 1.6, sz);
+        const g = new T.BufferGeometry();
+        g.setAttribute('position', new T.Float32BufferAttribute(pos, 3));
+        g.setAttribute('normal', new T.Float32BufferAttribute(nor, 3));
+        g.setAttribute('uv', new T.Float32BufferAttribute(uv, 2));
+        g.setAttribute('color', new T.Float32BufferAttribute(col, 3));
+        g.setAttribute('aBark', new T.Float32BufferAttribute(new Float32Array(pos.length / 3), 1));
+        g.setIndex(idx);
+        const m = new T.Mesh(g, M.needles);
+        m.position.set(x, y, z);
         m.castShadow = m.receiveShadow = true;
         tree.add(m);
       };
@@ -953,7 +1250,7 @@
       pad(-1.05, 2.62, -0.3, 0.8, 0.28, 0.65, 3);
       pad(0.5, 2.95, 0.1, 1.05, 0.36, 0.85, 4);
       pad(0.15, 3.3, 0.0, 0.6, 0.22, 0.5, 5);
-      const rock = new T.Mesh(lump(64, 0.4, 9, 1.3), M.rockCourt);
+      const rock = new T.Mesh(lump(64, 0.4, 9, 1.3), M.stone);
       rock.position.set(2.5, FLOOR + 0.4, -2.2);
       rock.scale.set(1.2, 0.8, 0.9);
       rock.rotation.y = 0.6;
@@ -995,6 +1292,8 @@
     const lr = new T.Vector3(), lu = new T.Vector3(), e2 = new T.Vector3(), a2 = new T.Vector3(), look = new T.Vector3();
     // the gaze is averaged over a short stretch of the path, like an operator who leads a turn
     // instead of snapping to each bend of the road
+    const HOUSE_AIM = new T.Vector3(0, 12, 0);
+    let portrait = false;
     const GAZE = [-4, -3, -2, -1, 0, 1, 2, 3, 4].map(k => [k * 0.005, Math.exp(-(k * k) / 8)]);
     function place(p, mx, my, bob, sway) {
       const t = paramAt(opts.still ? Math.round(p) : p);
@@ -1009,6 +1308,9 @@
         look.addScaledVector(a2.sub(e2).normalize(), wgt);
       }
       aim.copy(eye).addScaledVector(look.normalize(), reach);
+      // the opening is framed with the house right of the headline; on a portrait screen the
+      // headline sits below it instead, so the camera turns back to face the house
+      if (portrait) aim.lerp(HOUSE_AIM, 0.6 * (1 - smooth(clamp((opts.still ? Math.round(p) : p) / 0.5))));
       // never closer than 1.4 m to the ground, eased so the floor is never felt as a bump
       const ground = heightAt(eye.x, eye.z);
       const lift = Math.max(0, 1.4 - (eye.y - ground));
@@ -1027,18 +1329,24 @@
       cam.up.copy(Y).addScaledVector(side, sway * walk * 0.006);
       cam.position.copy(eye);
       cam.lookAt(aim);
+      cam.updateMatrixWorld();
+      sunView.value.copy(SUN).transformDirection(cam.matrixWorldInverse);
 
       // the sun's shadows cover what the camera is looking at, snapped to whole texels so they hold still
-      const size = clamp(Math.max(dist * 0.75, agl * 1.4) + 18, 28, 240);
+      // From the air they reach as far as the view does, so their edge never shows, at coarser texels
+      const size = clamp(Math.max(dist * 0.75, agl * 14) + 18, 28, 1100);
       const sh = sun.shadow.camera;
-      if (sh.right !== size) { sh.left = -size; sh.right = size; sh.top = size; sh.bottom = -size; sh.updateProjectionMatrix(); }
-      focus.copy(eye).addScaledVector(fwd, Math.min(dist * 0.6, size * 0.7));
+      if (sh.right !== size) {
+        sh.left = -size; sh.right = size; sh.top = size; sh.bottom = -size; sh.updateProjectionMatrix();
+        sun.shadow.normalBias = Math.max(0.07, ((2 * size) / sun.shadow.mapSize.x) * 1.2);
+      }
+      focus.copy(eye).addScaledVector(fwd, Math.min(dist * 0.6 + agl * 3, size * 0.75));
       focus.y = heightAt(focus.x, focus.z);
       lr.crossVectors(SUN, Y).normalize(); lu.crossVectors(lr, SUN);
       const texel = (2 * size) / sun.shadow.mapSize.x;
       const a = Math.round(focus.dot(lr) / texel) * texel, b = Math.round(focus.dot(lu) / texel) * texel, c = focus.dot(SUN);
       sun.target.position.copy(lr).multiplyScalar(a).addScaledVector(lu, b).addScaledVector(SUN, c);
-      sun.position.copy(sun.target.position).addScaledVector(SUN, 500);
+      sun.position.copy(sun.target.position).addScaledVector(SUN, 1600);
     }
 
     let w = 1, h = 1;
@@ -1052,11 +1360,14 @@
       comp.m.uniforms.uRes.value.set(W, H);
       cam.aspect = w / h;
       // portrait screens see more height, so the subject still fits
-      cam.fov = cam.aspect < 0.8 ? 62 : cam.aspect < 1.2 ? 50 : 38;
+      portrait = cam.aspect < 0.8;
+      cam.fov = portrait ? 62 : cam.aspect < 1.2 ? 50 : 38;
       cam.updateProjectionMatrix();
     }
     resize();
 
+    // a viewpoint off the journey, for looking at any part of the world while tuning it
+    let override = null;
     function draw(p, mx = 0, my = 0, bob = 0, sway = 0) {
       if (!ready) return false;
       renderer.info.reset();
@@ -1066,6 +1377,10 @@
       skyU.uTime.value = now;
       water.tex.offset.set(now * 0.004, now * 0.0025);
       place(p, mx, my, bob, sway);
+      if (override) {
+        cam.position.set(...override[0]); cam.lookAt(...override[1]); cam.updateMatrixWorld();
+        sunView.value.copy(SUN).transformDirection(cam.matrixWorldInverse);
+      }
       renderer.setRenderTarget(rtScene);
       renderer.render(scene, cam);
       if (high) {
@@ -1088,6 +1403,8 @@
       ready: () => ready,
       set onReady(fn) { onReady = fn; if (ready) fn(); },
       ground: heightAt, solids, info: () => renderer.info.render,
+      look(eye, at) { override = eye ? [eye, at] : null; },
+      scene,
       // for tests: the camera's height above whatever is under it, and its position
       probe(p) {
         if (!ready) return null;
