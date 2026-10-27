@@ -28,9 +28,10 @@
     <div class="stage">
       <canvas class="gl" aria-hidden="true"></canvas>
       <div class="photos" aria-hidden="true">
-        <div class="photo" data-src="photos/1.jpg" style="background-position:67% 50%"></div>
-        <div class="photo" data-src="photos/2.jpg" style="background-position:72% 50%"></div>
+        <!-- without WebGL these play the journey instead, one photo per station -->
         <div class="photo" data-src="photos/3.jpg" style="background-position:60% 50%"></div>
+        <div class="photo" data-src="photos/2.jpg" style="background-position:72% 50%"></div>
+        <div class="photo" data-src="photos/1.jpg" style="background-position:67% 50%"></div>
         <div class="photo" data-src="photos/4.jpg" style="background-position:50% 50%"></div>
         <div class="photo" data-src="photos/5.jpg" style="background-position:78% 50%"></div>
       </div>
@@ -106,8 +107,7 @@
 <footer class="foot"><span>© Ishikawa Studio</span><span>Tokyo · Kyoto</span></footer>
 
 <script src="vendor/three.min.js"></script>
-<script src="photos/photos.js"></script>
-<script src="photo3d.js"></script>
+<script src="scene3d.js"></script>
 <script src="main.js"></script>
 </body>
 </html>

@@ -22,26 +22,37 @@
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
   const ease = t => t * t * (3 - 2 * t);
 
-  // the photos as 3D spaces (photo3d.js); window.PHOTOS carries them as data URLs because
-  // WebGL refuses image files on a page opened straight from disk
-  const canvas = document.querySelector('.gl');
-  const world = window.Photo3D ? Photo3D.init(canvas, window.PHOTOS || photos.map(el => el.dataset.src), { still }) : null;
-  if (world) world.onReady = () => wake();
-  else stageEl.classList.add('no-gl');
-
-  // without WebGL the same photos play as flat layers instead
+  // which fallback photos have loaded
   const ready = photos.map(() => false);
-  if (!world) photos.forEach((el, k) => {
-    // each shot stacks above the next, so the one walking out stays in front
-    el.style.zIndex = photos.length - k;
-    const img = new Image();
-    img.onload = () => {
-      el.style.backgroundImage = `url("${el.dataset.src}")`;
-      ready[k] = true;
-      wake();
-    };
-    img.src = el.dataset.src;
-  });
+
+  // the 3D world (scene3d.js), at a lighter tier on phones and modest machines
+  const canvas = document.querySelector('.gl');
+  const modest = !pointer || (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
+  // ?tier=high or ?tier=low overrides the guess, for checking either on any machine;
+  // ?debug hands the world to the console as window.world
+  const params = new URLSearchParams(location.search);
+  const tier = params.get('tier') || (modest ? 'low' : 'high');
+  let world = window.Scene3D ? Scene3D.init(canvas, { still, tier, onFail: flatInstead }) : null;
+  if (params.has('debug')) window.world = world;
+  if (world) world.onReady = () => wake();
+  else flatInstead();
+
+  // without WebGL, or if the world fails to build, the photos play the journey as flat layers
+  function flatInstead() {
+    world = null;
+    stageEl.classList.add('no-gl');
+    photos.forEach((el, k) => {
+      // each shot stacks above the next, so the one walking out stays in front
+      el.style.zIndex = photos.length - k;
+      const img = new Image();
+      img.onload = () => {
+        el.style.backgroundImage = `url("${el.dataset.src}")`;
+        ready[k] = true;
+        wake();
+      };
+      img.src = el.dataset.src;
+    });
+  }
 
   const span = () => hero.offsetHeight - innerHeight;
   const toProgress = y => clamp((y / span()) * (last + 2 * HOLD) - HOLD, 0, last);

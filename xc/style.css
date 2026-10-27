@@ -50,7 +50,8 @@ a{color:inherit;text-decoration:none}
 .ghost{font-size:14px;font-weight:500;padding:12px 6px;border-bottom:1px solid var(--line)}
 
 /* hero */
-.hero{position:relative;height:600vh}
+/* a long scroll, so the journey through the world is never rushed */
+.hero{position:relative;height:900vh}
 .stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:#0d0b09 url(shots/poster.jpg) center/cover}
 .gl{position:absolute;inset:0;width:100%;height:100%;display:block}
 .stage.no-gl .gl{display:none}
