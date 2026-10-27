@@ -21,11 +21,16 @@
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
   const ease = t => t * t * (3 - 2 * t);
 
-  const world = window.Scene3D ? Scene3D.init(document.querySelector('.gl'), { eased: true }) : null;
-  if (!world) stageEl.classList.add('no-gl');
+  // the photos as 3D spaces (photo3d.js); window.PHOTOS carries them as data URLs because
+  // WebGL refuses image files on a page opened straight from disk
+  const canvas = document.querySelector('.gl');
+  const world = window.Photo3D ? Photo3D.init(canvas, window.PHOTOS || photos.map(el => el.dataset.src), { still }) : null;
+  if (world) world.onReady = () => wake();
+  else stageEl.classList.add('no-gl');
 
+  // without WebGL the same photos play as flat layers instead
   const ready = photos.map(() => false);
-  photos.forEach((el, k) => {
+  if (!world) photos.forEach((el, k) => {
     // each shot stacks above the next, so the one walking out stays in front
     el.style.zIndex = photos.length - k;
     const img = new Image();
@@ -63,31 +68,14 @@
   function draw(p, mx, my) {
     const i = Math.round(p);
 
-    // photos, looking around with the pointer: the plane turns a few degrees and slides against
-    // it, scaled up enough that its edges never come into view
-    let covered = false;
-    photos.forEach((el, k) => {
-      const { op, s, blur } = ready[k] ? photoAt(k, p) : { op: 0, s: 1, blur: 0 };
-      el.style.opacity = op.toFixed(3);
-      el.style.visibility = op > 0 ? 'visible' : 'hidden';
-      if (op > 0) {
-        el.style.transform = `translate3d(${(-mx * 2.2).toFixed(2)}%,${(-my * 1.6).toFixed(2)}%,0) ` +
-          `rotateY(${(mx * 6).toFixed(2)}deg) rotateX(${(-my * 4).toFixed(2)}deg) scale(${(s * 1.16).toFixed(4)})`;
-        // the shot walking out blurs as it rushes past
-        el.style.filter = blur > 0.05 ? `blur(${blur.toFixed(1)}px)` : '';
-      }
-      if (op >= 0.999) covered = true;
-    });
-
-    // the 3D scene fills any shot without a photo; cuts that involve it dip to black
     if (world) {
-      world.setProgress(p);
-      // the canvas is mirrored on screen, so its horizontal look is too
-      world.setLook(-mx, my);
-      world.setHidden(covered);
+      // keep the poster showing until the first photo has been built
+      canvas.style.visibility = world.draw(p, mx, my) ? 'visible' : 'hidden';
+    } else {
+      flat(p, mx, my);
     }
     const b = Math.round(p - 0.5);
-    const dip = still || !ready[b] || !ready[b + 1];
+    const dip = still || (!world && (!ready[b] || !ready[b + 1]));
     const edge = Math.abs(p - b - 0.5);
     veil.style.opacity = (dip && p > 0.3 && p < last - 0.3 ? Math.max(0, 1 - edge / 0.09) : 0).toFixed(3);
 
@@ -106,6 +94,22 @@
     bar.style.transform = `scaleY(${p / last})`;
     counter.textContent = String(i + 1).padStart(2, '0');
     hint.style.opacity = p > 0.15 ? 0 : 1;
+  }
+
+  // the flat fallback: each photo plane turns a few degrees with the pointer and slides against it,
+  // scaled up enough that its edges never come into view
+  function flat(p, mx, my) {
+    photos.forEach((el, k) => {
+      const { op, s, blur } = ready[k] ? photoAt(k, p) : { op: 0, s: 1, blur: 0 };
+      el.style.opacity = op.toFixed(3);
+      el.style.visibility = op > 0 ? 'visible' : 'hidden';
+      if (op > 0) {
+        el.style.transform = `translate3d(${(-mx * 2.2).toFixed(2)}%,${(-my * 1.6).toFixed(2)}%,0) ` +
+          `rotateY(${(mx * 6).toFixed(2)}deg) rotateX(${(-my * 4).toFixed(2)}deg) scale(${(s * 1.16).toFixed(4)})`;
+        // the shot walking out blurs as it rushes past
+        el.style.filter = blur > 0.05 ? `blur(${blur.toFixed(1)}px)` : '';
+      }
+    });
   }
 
   // scroll and pointer set targets; one loop eases toward them so the camera, the photos and the
@@ -137,7 +141,11 @@
   }
 
   addEventListener('scroll', () => { target = toProgress(scrollY - hero.offsetTop); wake(); }, { passive: true });
-  addEventListener('resize', () => { target = toProgress(scrollY - hero.offsetTop); wake(); });
+  addEventListener('resize', () => {
+    if (world) world.resize();
+    target = toProgress(scrollY - hero.offsetTop);
+    wake();
+  });
   if (pointer && !still) {
     addEventListener('pointermove', e => {
       look.tx = (e.clientX / innerWidth) * 2 - 1;

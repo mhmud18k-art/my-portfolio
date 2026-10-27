@@ -52,8 +52,7 @@ a{color:inherit;text-decoration:none}
 /* hero */
 .hero{position:relative;height:600vh}
 .stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:#0d0b09 url(shots/poster.jpg) center/cover}
-/* the shots are framed with their subject left of centre; mirrored, it sits right, clear of the headlines */
-.gl{position:absolute;inset:0;width:100%;height:100%;display:block;transform:scaleX(-1)}
+.gl{position:absolute;inset:0;width:100%;height:100%;display:block}
 .stage.no-gl .gl{display:none}
 /* the photos turn in perspective as the pointer looks around */
 .photos{position:absolute;inset:0;overflow:hidden;perspective:1100px}
