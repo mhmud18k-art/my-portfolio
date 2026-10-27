@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ishikawa — Architecture of Stillness</title>
+<meta name="description" content="Studio d'architecture Ishikawa. La où la nature rencontre la forme.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- shared shapes -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g-trunk" x1="0" x2="1">
+      <stop offset="0" stop-color="#3a2e24"/><stop offset=".5" stop-color="#5b4a3a"/><stop offset="1" stop-color="#2a211a"/>
+    </linearGradient>
+    <radialGradient id="g-leaf" cx=".4" cy=".3" r=".8">
+      <stop offset="0" stop-color="#5d6b3c"/><stop offset=".6" stop-color="#334222"/><stop offset="1" stop-color="#1c2614"/>
+    </radialGradient>
+    <linearGradient id="g-rock" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f2efe8"/><stop offset=".55" stop-color="#cfcac0"/><stop offset="1" stop-color="#8e887d"/>
+    </linearGradient>
+    <linearGradient id="g-pine" x1="0" x2="1">
+      <stop offset="0" stop-color="#1d2a20"/><stop offset="1" stop-color="#0e1610"/>
+    </linearGradient>
+    <symbol id="bonsai" viewBox="0 0 400 360">
+      <path d="M196 360c4-40-6-70-30-96-22-24-28-50-8-74 16-18 44-22 60-44 10-14 6-34-6-48 22 12 30 36 22 56-10 24-42 34-52 54-12 22 0 44 18 62 26 26 36 56 30 90z" fill="url(#g-trunk)"/>
+      <path d="M176 232c-30-6-62-2-92 14M214 150c30-18 66-22 100-12M190 110c-20-22-48-30-80-26" stroke="#3a2e24" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <g fill="url(#g-leaf)">
+        <ellipse cx="78" cy="244" rx="70" ry="22"/><ellipse cx="54" cy="236" rx="40" ry="16"/>
+        <ellipse cx="318" cy="136" rx="78" ry="24"/><ellipse cx="350" cy="126" rx="42" ry="16"/>
+        <ellipse cx="106" cy="80" rx="72" ry="22"/><ellipse cx="76" cy="72" rx="40" ry="14"/>
+        <ellipse cx="216" cy="40" rx="84" ry="26"/><ellipse cx="190" cy="28" rx="50" ry="18"/><ellipse cx="250" cy="26" rx="40" ry="14"/>
+      </g>
+    </symbol>
+    <symbol id="rock" viewBox="0 0 300 200">
+      <path d="M20 190C0 150 10 90 60 50 110 10 190 0 240 40c50 40 70 110 40 150z" fill="url(#g-rock)"/>
+      <path d="M70 70c40-30 100-40 150-10" stroke="#fff" stroke-opacity=".5" stroke-width="4" fill="none"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="nav">
+  <a class="brand" href="#top"><span class="brand-mark">+</span> ISHIKAWA</a>
+  <nav class="pills" aria-label="Sections">
+    <a href="#s1" data-scene="0">Studio</a>
+    <a href="#s2" data-scene="1">Matériaux</a>
+    <a href="#s3" data-scene="2">Philosophie</a>
+    <a href="#s5" data-scene="4">Expérience</a>
+  </nav>
+  <a class="cta cta-sm" href="#contact">Réserver</a>
+</header>
+
+<main id="top">
+  <section class="hero" aria-label="Visite">
+    <div class="stage">
+      <!-- 01 courtyard -->
+      <div class="scene" data-img="assets/scene-1.jpg">
+        <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="s1-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7b97b8"/><stop offset="1" stop-color="#d9e2ea"/></linearGradient>
+            <linearGradient id="s1-floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bdb8ae"/><stop offset="1" stop-color="#6e6a63"/></linearGradient>
+            <linearGradient id="s1-wall" x1="0" x2="1"><stop offset="0" stop-color="#eae7e1"/><stop offset="1" stop-color="#b9b4ab"/></linearGradient>
+          </defs>
+          <rect width="1600" height="900" fill="url(#s1-sky)"/>
+          <ellipse cx="500" cy="180" rx="260" ry="40" fill="#fff" opacity=".35"/>
+          <ellipse cx="1150" cy="120" rx="200" ry="30" fill="#fff" opacity=".25"/>
+          <path d="M0 0h420l60 160v560L0 900z" fill="url(#s1-wall)"/>
+          <path d="M480 160h640v560H480z" fill="#e4e0d8"/>
+          <path d="M1120 160l480-160v900l-480-180z" fill="#2a2622"/>
+          <path d="M1190 190l60-16v520l-60-14z" fill="#3d3731"/>
+          <path d="M0 900l480-180h640l480 180z" fill="url(#s1-floor)"/>
+          <path d="M520 720l-160 180M800 720v180M1080 720l160 180" stroke="#000" stroke-opacity=".06" stroke-width="3"/>
+          <use href="#rock" x="520" y="520" width="300" height="200"/>
+          <use href="#bonsai" x="640" y="300" width="400" height="420"/>
+          <ellipse cx="800" cy="724" rx="300" ry="18" fill="#000" opacity=".15"/>
+        </svg>
+      </div>
+      <!-- 02 corridor -->
+      <div class="scene" data-img="assets/scene-2.jpg">
+        <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <pattern id="wood" width="26" height="900" patternUnits="userSpaceOnUse"><rect width="26" height="900" fill="#2b211a"/><rect width="2" height="900" fill="#1a130e"/><rect x="9" width="1" height="900" fill="#3a2d22"/></pattern>
+            <linearGradient id="s2-floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a958c"/><stop offset="1" stop-color="#3c3935"/></linearGradient>
+            <linearGradient id="s2-light" x1="0" x2="1"><stop offset="0" stop-color="#ffb35c" stop-opacity="0"/><stop offset=".5" stop-color="#ffcf8a"/><stop offset="1" stop-color="#ffb35c" stop-opacity="0"/></linearGradient>
+          </defs>
+          <rect width="1600" height="900" fill="#1c1713"/>
+          <path d="M0 0l620 300v300L0 900z" fill="url(#wood)"/>
+          <path d="M1600 0L980 300v300l620 300z" fill="url(#wood)"/>
+          <path d="M620 300h360v300H620z" fill="#dfe4e6"/>
+          <path d="M620 300h360v120H620z" fill="#9fb3c5"/>
+          <use href="#rock" x="640" y="500" width="130" height="90"/>
+          <use href="#bonsai" x="720" y="380" width="200" height="220"/>
+          <path d="M0 900l620-300h360l620 300z" fill="url(#s2-floor)"/>
+          <path d="M800 600L740 900" stroke="url(#s2-light)" stroke-width="5"/>
+          <path d="M800 600L740 900" stroke="#ffb35c" stroke-opacity=".25" stroke-width="40" filter="url(#blur)"/>
+          <filter id="blur"><feGaussianBlur stdDeviation="14"/></filter>
+        </svg>
+      </div>
+      <!-- 03 exterior -->
+      <div class="scene" data-img="assets/scene-3.jpg">
+        <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="s3-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b6f88"/><stop offset="1" stop-color="#c9d3dc"/></linearGradient>
+            <linearGradient id="s3-mtn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f6f8"/><stop offset=".35" stop-color="#8f9cab"/><stop offset="1" stop-color="#4b5866"/></linearGradient>
+            <linearGradient id="s3-roof" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3f1ec"/><stop offset="1" stop-color="#d4cfc6"/></linearGradient>
+          </defs>
+          <rect width="1600" height="900" fill="url(#s3-sky)"/>
+          <path d="M0 420l180-140 120 60 200-200 180 160 140-90 220 190 180-120 200 140 180-100v380H0z" fill="url(#s3-mtn)"/>
+          <path d="M0 470l260-60 300 40 260-50 300 60 240-40 240 40v200H0z" fill="#3c4954" opacity=".7"/>
+          <g class="pines" data-count="26" data-y="470" data-h="90" data-x0="1000" data-x1="1600"></g>
+          <path d="M0 560h1600v340H0z" fill="#454a4c"/>
+          <path d="M120 520l900-40 520 70-900 60z" fill="url(#s3-roof)"/>
+          <path d="M210 600l790-50v260l-790 90z" fill="#d9d5cc"/>
+          <path d="M360 610l130-8v230l-130 14z" fill="#141210"/>
+          <path d="M560 598l160-10v220l-160 18z" fill="#1d1915"/>
+          <path d="M560 598l160-10v220l-160 18z" fill="#ffb35c" opacity=".12"/>
+          <path d="M780 584l100-6v210l-100 12z" fill="#141210"/>
+          <path d="M1000 550l520 60v240l-520-40z" fill="#bdb8ae"/>
+          <path d="M0 860l1600-60v100H0z" fill="#2c2f30"/>
+        </svg>
+      </div>
+      <!-- 04 aerial -->
+      <div class="scene" data-img="assets/scene-4.jpg">
+        <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="s4-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6d7f94"/><stop offset="1" stop-color="#bcc6cf"/></linearGradient>
+            <linearGradient id="s4-lake" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#546170"/><stop offset="1" stop-color="#2f3943"/></linearGradient>
+            <linearGradient id="s4-slope" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4c5a3c"/><stop offset="1" stop-color="#232b1c"/></linearGradient>
+          </defs>
+          <rect width="1600" height="900" fill="url(#s4-sky)"/>
+          <path d="M0 260l160-90 140 60 240-150 200 140 160-70 260 120 200-110 240 120v120H0z" fill="#dfe4ea"/>
+          <path d="M0 300l220-50 280 40 300-70 300 70 260-40 240 50v120H0z" fill="#56636f"/>
+          <path d="M0 360h1600v200H0z" fill="url(#s4-lake)"/>
+          <path d="M0 520c300-60 600-40 900 0s500 30 700 0v380H0z" fill="url(#s4-slope)"/>
+          <g class="pines" data-count="90" data-y="520" data-h="70" data-x0="0" data-x1="1600" data-spread="380"></g>
+          <g transform="translate(560 560)">
+            <path d="M0 80l280-80 220 60-280 80z" fill="#f1eee8"/>
+            <path d="M0 80v40l220 60v-40z" fill="#bfb9ae"/>
+            <path d="M220 140v40l280-80V60z" fill="#d8d3ca"/>
+            <path d="M60 86l120-34 60 16-120 34z" fill="#6b7480"/>
+            <path d="M300 10l200-56 160 44-200 56z" fill="#ece9e2"/>
+            <path d="M460 54v34l200-56V-2z" fill="#cdc7bd"/>
+          </g>
+          <path d="M600 760c80 20 160 60 200 140" stroke="#cfc9bd" stroke-width="10" fill="none" opacity=".6"/>
+        </svg>
+      </div>
+      <!-- 05 interior -->
+      <div class="scene" data-img="assets/scene-5.jpg">
+        <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="s5-court" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dfe2e3"/><stop offset="1" stop-color="#b6b1a8"/></linearGradient>
+            <linearGradient id="s5-bench" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a4535"/><stop offset="1" stop-color="#2a1f17"/></linearGradient>
+          </defs>
+          <rect width="1600" height="900" fill="#14110f"/>
+          <path d="M760 130h640v520H760z" fill="url(#s5-court)"/>
+          <path d="M760 130h180v520H760z" fill="#9b968d" opacity=".5"/>
+          <path d="M1240 130h160v520h-160z" fill="#2a2622" opacity=".8"/>
+          <use href="#rock" x="820" y="420" width="260" height="180"/>
+          <use href="#bonsai" x="900" y="200" width="360" height="400"/>
+          <rect x="760" y="130" width="640" height="520" fill="none" stroke="#0b0907" stroke-width="18"/>
+          <path d="M520 720h900l120 60H400z" fill="url(#s5-bench)"/>
+          <path d="M400 780h1140v40H400z" fill="#1c150f"/>
+          <path d="M440 822h1060" stroke="#ffb35c" stroke-width="3"/>
+          <path d="M440 822h1060" stroke="#ffb35c" stroke-opacity=".35" stroke-width="30" filter="url(#blur5)"/>
+          <filter id="blur5"><feGaussianBlur stdDeviation="12"/></filter>
+        </svg>
+      </div>
+
+      <div class="shade"></div>
+
+      <div class="chapters">
+        <article class="chapter" id="s1">
+          <p class="kicker">01 / 05 — Est. 2009 · Tokyo, Japan</p>
+          <h1>Architecture<br>of Stillness.</h1>
+          <p>Là où la nature rencontre la forme. Une approche méditative du design spatial, enracinée dans la tradition japonaise et la matérialité brute.</p>
+          <div class="tags"><span>Résidentiel</span><span>Commercial</span><span>Paysagisme</span></div>
+        </article>
+        <article class="chapter" id="s2">
+          <p class="kicker">02 / 05 — Matériaux</p>
+          <h2>La vérité est<br>dans la texture.</h2>
+          <p>Cèdre brûlé, béton brut, pierre de rivière. Nous choisissons des matériaux qui vieillissent avec grâce et portent la mémoire du lieu.</p>
+          <div class="tags"><span>Bois</span><span>Pierre</span><span>Béton</span><span>Lumière</span></div>
+        </article>
+        <article class="chapter" id="s3">
+          <p class="kicker">03 / 05 — Philosophie · 間 Ma</p>
+          <h2>L'art de la<br>retenue.</h2>
+          <p>Nous laissons les matériaux respirer, la lumière guider et le silence parler. Chaque projet commence par le vide.</p>
+          <div class="stats"><div><b>84</b><span>projets</span></div><div><b>15</b><span>ans</span></div><div><b>12</b><span>prix</span></div></div>
+        </article>
+        <article class="chapter" id="s4">
+          <p class="kicker">04 / 05 — Hakuba, Nagano</p>
+          <h2>Ancré dans<br>le paysage.</h2>
+          <p>Une maison posée sur la pente, entre forêt et lac. L'architecture s'efface pour laisser la montagne parler.</p>
+        </article>
+        <article class="chapter" id="s5">
+          <p class="kicker">05 / 05 — Découvrir nos espaces</p>
+          <h2>Entrez dans<br>l'expérience.</h2>
+          <p>Réservez une visite privée pour découvrir nos réalisations et le dialogue qu'elles entretiennent avec la nature.</p>
+          <div class="actions"><a class="cta" href="#contact">Réserver une visite</a><a class="ghost" href="#projets">Voir les projets</a></div>
+        </article>
+      </div>
+
+      <div class="hud">
+        <div class="progress"><i></i></div>
+        <span class="counter">01</span>
+      </div>
+      <div class="hint" aria-hidden="true">Défiler</div>
+    </div>
+  </section>
+
+  <section class="projects" id="projets">
+    <header class="sec-head">
+      <p class="kicker">Sélection</p>
+      <h2>Projets récents</h2>
+    </header>
+    <div class="grid">
+      <a class="card" href="#contact"><div class="thumb t1"></div><h3>Maison Hakuba</h3><p>Résidence · 2024</p></a>
+      <a class="card" href="#contact"><div class="thumb t2"></div><h3>Pavillon Kyoto</h3><p>Commercial · 2023</p></a>
+      <a class="card" href="#contact"><div class="thumb t3"></div><h3>Jardin Setagaya</h3><p>Paysagisme · 2022</p></a>
+    </div>
+  </section>
+
+  <section class="contact" id="contact">
+    <p class="kicker">Contact</p>
+    <h2>Commençons par le silence.</h2>
+    <a class="cta" href="mailto:studio@ishikawa.example">studio@ishikawa.example</a>
+  </section>
+</main>
+
+<footer class="foot"><span>© Ishikawa Studio</span><span>Tokyo · Kyoto</span></footer>
+
+<script src="main.js"></script>
+</body>
+</html>
